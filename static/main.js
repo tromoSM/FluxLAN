@@ -1,13 +1,13 @@
 window.addEventListener('DOMContentLoaded',function(){
-let mainSt={rec:'__not-found__',ori:"up"}
+let mainSt={rec:'__not-found__',ori:0}
 let contx$$RUNNING=false
-let orin='up'
+let orin=0
 document.querySelector(`[chnO="o"]`).addEventListener('click',function(){
-if(orin=='up'){
-    orin='side'
+if(orin==270){
+   orin=0 
 }
 else{
-    orin='up'
+    orin+=90
 }
 })
 async function unRStream(){
