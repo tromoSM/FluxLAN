@@ -1,18 +1,15 @@
-from flask import Flask,jsonify,request,render_template,abort
+from flask import Flask,request,render_template,abort
+from flask_socketio import SocketIO,emit
 import os
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 
+S=SocketIO(main,cors_allowed_origins="*")
+
 ECHFRM='__not found__'
 orientation='up'
-@main.route('/process',methods=['POST'])
-def mainroute():
-    global ECHFRM,orientation
-    mainA=request.get_json()
-    a=mainA.get('rec')
-    orientation=mainA.get('ori')
-    print(a)
-    ECHFRM=a
-    return jsonify({'status':'success','recieved':a}),200
+@S.on('Process')
+def mainroute(data):
+   S.emit('Stream',data)
 @main.route('/')
 def web():
  return render_template('index.html')
@@ -22,9 +19,6 @@ def admin():
       abort(403)
       return 'sybau'
    return render_template('tromoSM-admin.html')
-@main.route('/stream')
-def stream():
-   global ECHFRM,orientation
-   return jsonify({'rec':ECHFRM,"ori":orientation})
+
 if(__name__=="__main__"):
-    main.run(debug=True,host='0.0.0.0',port='84',ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
+    S.run(main,debug=True,host='0.0.0.0',port='84',ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
