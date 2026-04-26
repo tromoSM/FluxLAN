@@ -2,6 +2,8 @@ window.addEventListener('DOMContentLoaded',function(){
 let mainSt={rec:'__not-found__',ori:0}
 let contx$$RUNNING=false
 let orin=0
+const S=io()
+
 document.querySelector(`[chnO="o"]`).addEventListener('click',function(){
 if(orin==270){
    orin=0 
@@ -29,18 +31,7 @@ else{
      let imim=mainC.toDataURL('image/jpeg',0.6)
      console.log(imim)
      mainSt={rec:imim,ori:orin}
-     fetch('/process',{
-      method: 'POST',
-      headers:{
-        'Content-type':'application/json'
-      },
-      body:JSON.stringify(mainSt)
-     })
-     .then(response=> response.json())
-     .then(re=>console.debug('SUCCESS',re))
-     .catch(err=>{
-      console.error('Error',err)
-     })
+     S.emit('Process',mainSt)
      },100)
     }
     catch(er){
