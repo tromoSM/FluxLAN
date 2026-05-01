@@ -1,13 +1,18 @@
 from flask import Flask,request,render_template,abort
 from flask_socketio import SocketIO,emit
 import os
+import sys
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 MAINUSERSDI={}
 ALLUSERS=[] #keep this
 S=SocketIO(main,cors_allowed_origins="*")
 LASTFrame='__not-found__'
 orientation='up'
-
+stream1using=False
+stream2using=False
+# FIRST TIME
+if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
+    os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
 # GLOBAL UI FUNCc
 def joinev(user):
     if user not in ALLUSERS:
@@ -15,12 +20,16 @@ def joinev(user):
     else:
        #emtIOerrUSR
        pass
-    S.emit('adminJOIN',user)      
+    S.emit('adminJOIN',user)
+    S.emit('CAMlist',ALLUSERS)  
 
 def leaveev(user):
     if user in ALLUSERS:
         ALLUSERS.remove(user)
     S.emit('adminLEAVE',user)  
+    for i in ALLUSERS:
+       print(i)
+    S.emit('CAMlist',ALLUSERS)  
 
 def UserError(user,title,description): # DONT USE YET
    S.emit('notification',{"user":user,"title":title,'description':description}) #change to S.to SID
@@ -29,8 +38,8 @@ def UserError(user,title,description): # DONT USE YET
 def mainroute(data):
    global LASTFrame
    if data!=LASTFrame:
-    S.emit('Stream',data)
-    LASTFrame=data
+     S.emit('Stream',data)
+     LASTFrame=data
 
 @S.on("join")
 def ini(dih):
@@ -38,6 +47,7 @@ def ini(dih):
     curuser=MAINUSERSDI.get(request.sid,request.sid)
     print(f"│ User connected : {curuser}")
     joinev(curuser)
+    print(len(MAINUSERSDI))
 
 @S.on('disconnect')
 def left():
@@ -54,6 +64,16 @@ def min(user):
 def revive(user):
     joinev(user)
 
+@S.on('INFO')
+def ask(q):
+   if q=='suggStream':
+      return {'stream': len(MAINUSERSDI)}
+   
+@S.on('OpenFolder')
+def open(fl):
+    if sys.platform=='win32':
+       if fl=='user/Pictures/app':
+        os.startfile(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
 @main.route('/')
 def web():
  return render_template('index.html')
