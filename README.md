@@ -9,12 +9,12 @@ Turn your old phones into a local camera network
  - [x] color balancing
  - [x] selfie and rear cam
  - [ ] Grid when multiple cams
- - [ ] Multiple streams
+ - [x] Multiple streams
  - [ ] Alert system
  - [ ] Battery status
  - [ ] Capture when
  - [ ] Record
- - [ ] List devices
- - [ ] hover to zoom
+ - [x] List devices
+ - [ ] ~~hover to zoom~~
 
 ###### started on 26.04.23
