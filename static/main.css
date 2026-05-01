@@ -1,0 +1,116 @@
+@font-face {
+    font-family: 'main-ui';
+    src: url('InterVar.ttf');
+}
+html,body{
+    padding: 0;
+    margin: 0;
+    font-family: main-ui;
+}
+button{font-family: inherit;}
+popup{
+    width: fit-content;
+    position: absolute;
+    background-color: #d8d8d8c5;
+    backdrop-filter: blur(20px);
+    display: flex;
+    padding: 20px 10px;
+    flex-direction: column;
+    border-radius: 0px 0px 15px 15px;
+    animation: open-popup 0.2s;
+}
+popup input[type=range]{accent-color: #5249499c;}
+
+popup[closing]{
+    padding: 10px;
+    opacity: 0;
+    transition: 0.2s;
+}
+flex {
+	justify-content: center;
+	align-content: center;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+	gap: 4px;
+}
+@keyframes open-popup{
+    from{
+    opacity: 0;
+        padding: 10px;
+    }
+    to{
+        padding: 20px 10px;
+    opacity: 1;
+    }
+}
+full{
+    display: flex;
+    flex-direction: column;
+}
+dashboard{
+    background-color: #d8d8d8;
+    width: 100%;
+    display: flex;
+    transition: 0.2s;
+    padding: 10px 0px;
+}
+dashboard[visible=no]{
+transform: translateY(-100%);
+}
+[float=float]{
+    position: fixed;
+    top: 10px;
+    left: 10px;
+transform: translateY(200%);
+}
+popup button {
+	background: #00000012;
+	border: none;
+	border-radius: 50px;
+    cursor: pointer;
+	font-size: 15px;
+	padding: 3px 0px;
+	margin: 0px 0px 14px;
+}
+popup button[selected]{
+	background: #14141440;
+
+}
+dashboard button[selected]{
+    background: rgba(0, 0, 0, 0.247);
+}
+cover {
+	position: relative;
+	display: block;
+	width: fit-content;
+	height: 100vh;
+}
+hvzoom{
+    display: flex;
+    position: absolute;
+    transform: translate(-50%,-50%);
+    width: 50px;
+    background-size: 500%;
+    height: 50px;
+}
+popup[frame-rate] [warning]{
+width: 247px;
+}
+popup [warning]{
+  font-size: 12px;
+  padding: 0px;
+  margin: 0;
+  color: #8f8f8f;
+}
+[stream=src]{
+ transform: scale(1);
+}
+[stream=src][closed]{
+    filter: brightness(0) !important;
+}
+[stream=src][flipping]{
+    transform: scaleX(-1) !important;
+    transition: 1s transform;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+}
