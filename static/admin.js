@@ -128,15 +128,17 @@ window.addEventListener('DOMContentLoaded',function(){
                     ra.addEventListener('input',function(){
                          localStorage.setItem(`last$$-${name}`,ra.value)
                          localStorage.setItem('input-changed','true')
-                        document.querySelector('img').style.filter=`brightness(${localStorage.getItem('last$$-brightness')}) hue-rotate(${localStorage.getItem('last$$-hue')}deg) saturate(${localStorage.getItem('last$$-saturation')}) contrast(${localStorage.getItem('last$$-contrast')})`
-                    })
+                         document.querySelectorAll('img').forEach(cam=>{
+                          cam.style.filter=`brightness(${localStorage.getItem('last$$-brightness')}) hue-rotate(${localStorage.getItem('last$$-hue')}deg) saturate(${localStorage.getItem('last$$-saturation')}) contrast(${localStorage.getItem('last$$-contrast')})`
+                         })
+                        })
                 })
                     resetb.addEventListener('click',function(){
                         localStorage.removeItem('last$$-brightness')
                         localStorage.removeItem('last$$-hue')
                         localStorage.removeItem('last$$-saturation')
                         localStorage.removeItem('last$$-contrast')
-                        window.location.reload()
+                        window.location.reload() 
                     })
                 document.body.appendChild(pop)
                 }
@@ -251,7 +253,9 @@ window.addEventListener('DOMContentLoaded',function(){
         })
     })
     if(localStorage.getItem('input-changed')){
-                     document.querySelector('img').style.filter=`brightness(${localStorage.getItem('last$$-brightness')}) hue-rotate(${localStorage.getItem('last$$-hue')}deg) saturate(${localStorage.getItem('last$$-saturation')}) contrast(${localStorage.getItem('last$$-contrast')})`
+                     document.querySelectorAll('img').forEach(cam=>{
+                         cam.style.filter=`brightness(${localStorage.getItem('last$$-brightness')}) hue-rotate(${localStorage.getItem('last$$-hue')}deg) saturate(${localStorage.getItem('last$$-saturation')}) contrast(${localStorage.getItem('last$$-contrast')})`
+                     })
     }
     //messaging system as message()
     S.on('adminLEAVE',function(user){
@@ -262,4 +266,6 @@ window.addEventListener('DOMContentLoaded',function(){
         //message(user)
         console.log(user)
     })
+    
+
 })
