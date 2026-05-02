@@ -2,6 +2,8 @@ from flask import Flask,request,render_template,abort
 from flask_socketio import SocketIO,emit
 import os
 import sys
+from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
+import ctypes
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 MAINUSERSDI={}
 ALLUSERS=[] #keep this
@@ -33,6 +35,18 @@ def leaveev(user):
 
 def UserError(user,title,description): # DONT USE YET
    S.emit('notification',{"user":user,"title":title,'description':description}) #change to S.to SID
+
+def HostNotification(title,description,fallbackicon=0x40):
+   if(sys.platform=='win32'):
+       try:
+        maintk=WindowsToaster("FluxLAN")
+        toast=Toast()
+        toast.text_fields=[title,description]
+        toast.audio=ToastAudio(AudioSource.Default, looping=0)
+        maintk.show_toast(toast)
+       except Exception as ex:
+          ctypes.windll.user32.MessageBoxW(0,f"{title.upper()}\n{"￣"*(int(len(description)/2))}\n{description}","FluxLAN",fallbackicon)
+          #add to err log 10>win {ex}
 #---
 @S.on('Process')
 def mainroute(data):
