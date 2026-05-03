@@ -8,6 +8,40 @@ window.addEventListener('DOMContentLoaded',function(){
         allcams=all
         console.log(all)
     })
+    window.openS=function(path){
+        S.emit('OpenSelected',path)
+    }
+    window.openDir=function(path){
+        S.emit('OpenDir',path)
+    }
+    async function notification({level='__info__',title='',body='',icon='__none__',timeout=4}={}){
+        let notification=document.createElement('notification')
+        notification.setAttribute('level',level)
+        let titlea=document.createElement('h3')
+        titlea.innerText=title
+        let desc=document.createElement('p')
+        desc.innerHTML=body //dont change to innertext add el act
+        if(icon!='__none__'){
+            let imimicon=document.createElement('img')
+            imimicon.src=icon
+            notification.appendChild(imimicon)
+        }
+        let flexC=document.createElement('flexCol')
+        flexC.appendChild(titlea)
+        flexC.appendChild(desc)
+        notification.appendChild(flexC)
+        await sleep(200)
+        document.body.appendChild(notification)
+        if(timeout!='never'){
+        await sleep(parseInt(timeout*1000))
+        notification.setAttribute('closing','')
+        await sleep(300)
+        notification.remove()
+
+        }
+
+    }
+
     //layout
     let mainlayoutbt=['hide ribbon','color balance','frame rate','devices','saved folder','#','$start recording','capture','flip camera','advanced']
     mainlayoutbt.forEach(bt=>{
@@ -53,6 +87,7 @@ window.addEventListener('DOMContentLoaded',function(){
         ac.addEventListener('click',async function(){
             let pos=ac.getBoundingClientRect()
             if(act=='flip-camera'){
+             if(allcams.length!==0){
               document.querySelector('[stream=src]').setAttribute('closed','')
               await S.emit('Pref',{face:"toggle"}) 
               S.on('adminLEAVE',function(){
@@ -62,6 +97,10 @@ window.addEventListener('DOMContentLoaded',function(){
               document.querySelector('[stream=src]').removeAttribute('flipping')
               document.querySelector('[stream=src]').removeAttribute('closed')
               })
+              }
+             else{
+                notification({title:'No device connected',body:'Cannot flip camera : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
+             }
             }
             else if(act=='hide-ribbon'){
                 let dash=document.querySelector('dashboard')
@@ -250,6 +289,27 @@ window.addEventListener('DOMContentLoaded',function(){
             else if(act=='saved-folder'){
                 S.emit('OpenFolder','user/Pictures/app')
             }
+
+            else if(act=='capture'){
+                document.querySelectorAll('[stream]').forEach(str=>{
+                    let maincanv=document.createElement('canvas')
+                    let cavget=maincanv.getContext('2d')
+                    maincanv.width=str.naturalWidth
+                    maincanv.height=str.naturalHeight
+                    if(localStorage.getItem('input-changed')){
+                         cavget.filter=`brightness(${localStorage.getItem('last$$-brightness')}) hue-rotate(${localStorage.getItem('last$$-hue')}deg) saturate(${localStorage.getItem('last$$-saturation')}) contrast(${localStorage.getItem('last$$-contrast')})`
+                    }
+                    else{
+                      cavget.filter='brightness(1)'
+                    }
+                    cavget.drawImage(str,0,0,maincanv.width,maincanv.height)
+                    console.log(maincanv.toDataURL('image/jpeg'))
+                    S.emit('SaveImage',maincanv.toDataURL('image/jpeg'),path=>{
+                        notification({title:"Image saved",body:`Image saved to <span onclick="openDir('${path.dir}')" >${path.dir}/</span><span button='open' onclick="openS('${path.file}')">Open</span>`,timeout:3})
+                    })
+                    maincanv.toDataURL('image/jpeg')
+                })
+            }
         })
     })
     if(localStorage.getItem('input-changed')){
@@ -259,13 +319,13 @@ window.addEventListener('DOMContentLoaded',function(){
     }
     //messaging system as message()
     S.on('adminLEAVE',function(user){
-        //message(user)
+        notification({title:`${user} left`,body:`${user} has left fluxLAN.`,icon:'static/Assets/favicon.png',timeout:4})
         console.log(user)
     })
     S.on('adminJOIN',function(user){
         //message(user)
+        notification({title:`${user} joined`,body:`${user} joined.`,icon:'static/Assets/favicon.png',timeout:2})
         console.log(user)
     })
-    
 
 })
