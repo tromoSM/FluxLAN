@@ -4,6 +4,10 @@ import os
 import sys
 from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
 import ctypes
+import base64
+from datetime import datetime
+import subprocess
+
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 MAINUSERSDI={}
 ALLUSERS=[] #keep this
@@ -15,6 +19,8 @@ stream2using=False
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
+if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN','Captures')):
+    os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Captures"))
 # GLOBAL UI FUNCc
 def joinev(user):
     if user not in ALLUSERS:
@@ -84,7 +90,7 @@ def ask(q):
       return {'stream': len(MAINUSERSDI)}
    
 @S.on('OpenFolder')
-def open(fl):
+def openF(fl):
     if sys.platform=='win32':
        if fl=='user/Pictures/app':
         os.startfile(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
@@ -100,5 +106,30 @@ def admin():
 @S.on('Pref')
 def mainfunc(pref):
         S.emit('JSPrefREC',pref)
+@S.on('SaveImage')
+def save(data):
+    datetimeX=datetime.now()
+    if ',' in data:
+      header,base=data.split(',')
+    else:
+      base=data
+    
+    with open(f'{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}.jpg")}',"wb") as im:
+       im.write(base64.b64decode(base))
+    return {"file":str(f"Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}"),'dir':"Captures"}
+@S.on("OpenSelected")
+def openS(path):
+ if sys.platform=='win32':
+   try:
+    subprocess.Popen(f'explorer /select,{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"{path}.jpg"))}') 
+   except Exception as err:
+    print(err)
+ else: 
+   os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"{path}.jpg"))
+
+@S.on('OpenDir')
+def openD(path):
+    os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",path))
+
 if(__name__=="__main__"):
     S.run(main,debug=True,host='0.0.0.0',port='84',ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
