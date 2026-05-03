@@ -16,5 +16,6 @@ Turn your old phones into a local camera network
  - [ ] Record
  - [x] List devices
  - [ ] ~~hover to zoom~~
+ - [ ] Audio support
 
 ###### started on 26.04.23
