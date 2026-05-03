@@ -41,7 +41,9 @@ window.addEventListener('DOMContentLoaded',function(){
         }
 
     }
-
+    S.on('AdminNotification',function(data){
+        notification({title:data.title,body:data.body,icon:data.icon,level:data.level,timeout:data.timeout})
+    })
     //layout
     let mainlayoutbt=['hide ribbon','color balance','frame rate','devices','saved folder','#','$start recording','capture','flip camera','advanced']
     mainlayoutbt.forEach(bt=>{
@@ -214,7 +216,7 @@ window.addEventListener('DOMContentLoaded',function(){
                 def.innerText='medium'
                 high.innerText='high'
                 let flex=document.createElement('flex')
-                warning.innerText='Higher FPS may use more data and battery on older devices'
+                warning.innerText='Higher FPS may use more battery and might lag on older devices'
                 flex.append(eco,def,high)
                 pop.appendChild(flex)
                 pop.appendChild(warning)
@@ -309,6 +311,10 @@ window.addEventListener('DOMContentLoaded',function(){
                     })
                     maincanv.toDataURL('image/jpeg')
                 })
+            }
+            else if(act=='start-recording'){
+                    alert('yo')
+                    S.emit('Record',{command:"start",stream:0})
             }
         })
     })
