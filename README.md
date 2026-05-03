@@ -10,7 +10,7 @@ Turn your old phones into a local camera network
  - [x] selfie and rear cam
  - [ ] Grid when multiple cams
  - [x] Multiple streams
- - [ ] Alert system
+ - [x] Alert system
  - [ ] Battery status
  - [ ] Capture when
  - [ ] Record
