@@ -12,12 +12,14 @@ popup{
     width: fit-content;
     position: absolute;
     background-color: #d8d8d8c5;
-    backdrop-filter: blur(20px);
     display: flex;
     padding: 20px 10px;
     flex-direction: column;
     border-radius: 0px 0px 15px 15px;
     animation: open-popup 0.2s;
+}
+notification,popup{
+    backdrop-filter: blur(20px);
 }
 popup input[type=range]{accent-color: #5249499c;}
 
@@ -113,4 +115,53 @@ popup [warning]{
     transition: 1s transform;
     perspective: 1000px;
     transform-style: preserve-3d;
+}
+popup[devices] p:not([warning]){
+  padding: 4px 15px;
+  margin: 2px 0px;
+  font-size: 14px;
+  background: #0000001c;
+  text-align: left;
+  border-radius: 7px;
+  color: #0009;
+}
+notification {
+	display: flex;
+	width: fit-content;
+	background: #ababab47;
+	position: fixed;
+	right: 10px;
+	bottom: 10px;
+    border-radius: 8px;
+    padding: 4px 16px;
+    min-width: 200px;
+    align-items: center;
+    animation: notif-in 0.3s ;
+    max-width: 385px;
+}
+@keyframes notif-in{
+    from{transform: translateX(50px);opacity: 0;}
+    to{
+        transform: translateX(0px);opacity: 1;
+    }
+}
+flexcol {
+	display: flex;padding-top: 4px;
+	flex-direction: column;
+}
+notification[closing]{
+    transition: 0.3s;
+    transform: translateX(50px);opacity: 0;
+}
+flexcol p{font-size: 12px;}
+flexcol *{
+    padding: 0;margin: 0;
+}
+notification img{
+    height: 44px;
+  margin-right: 8px;
+}
+[level=error]{
+    border: 1px solid #ff00002e;background: #ffbaba47;
+  box-shadow: 0px 4px 10px #0404044d;
 }
