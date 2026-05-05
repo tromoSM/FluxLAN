@@ -313,8 +313,21 @@ window.addEventListener('DOMContentLoaded',function(){
                 })
             }
             else if(act=='start-recording'){
-                    alert('yo')
-                    S.emit('Record',{command:"start",stream:0})
+                    let recstate
+                    S.emit('INFO','ifRecRunning',(st)=>{
+                        recstate=st.running
+                        console.log(recstate)
+                        if(recstate=='False'){
+                            S.emit('Record',{command:"start",stream:0})
+                            ac.innerText='Stop recording'
+                            //add notification
+                         }
+                         else{
+                            S.emit('Record',{command:"stop",stream:0})
+                            ac.innerText='Start recording'
+                        }
+                    })
+
             }
         })
     })
