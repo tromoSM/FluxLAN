@@ -21,11 +21,13 @@ orientation='up'
 RecordingRunning=False
 CurrentRecordStream=False
 LASTrecStamp=None
+
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN','Captures')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Captures"))
+
 # GLOBAL UI FUNCc
 def joinev(user):
     if user not in ALLUSERS:
@@ -59,6 +61,11 @@ def HostNotification(title,description,fallbackicon=0x40):
        except Exception as ex:
           ctypes.windll.user32.MessageBoxW(0,f"{title.upper()}\n{"￣"*(int(len(description)/2))}\n{description}","FluxLAN",fallbackicon)
           #add to err log 10>win {ex}
+
+
+def onerr(type,value,traceback):
+   print(f'type : {type}\nvalue : {value}\ntraceback:{traceback}')
+
 #---
 @S.on('Process')
 def mainroute(data):
@@ -119,6 +126,7 @@ def admin():
 @S.on('Pref')
 def mainfunc(pref):
         S.emit('JSPrefREC',pref)
+
 @S.on('SaveImage')
 def save(data):
     datetimeX=datetime.now()
@@ -170,6 +178,8 @@ def record(data):
              vid.write(tempbinaryrecs)             
            
            AdminNotification(title='Video saved',body=f'Video saved to <span onclick="openDir({'Captures'})">Captures/</span><span button="open" onclick="{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}">open</span>',timeout=3)
-        
+
+sys.excepthook=onerr     
 if(__name__=="__main__"):
     S.run(main,debug=True,host='0.0.0.0',port='84',ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
+    
