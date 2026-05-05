@@ -1,7 +1,6 @@
-@font-face {
-    font-family: 'main-ui';
-    src: url('InterVar.ttf');
-}
+@font-face{font-family: 'main-ui';src: url('InterVar.ttf');}
+@font-face{font-family: "Material Symbols Rounded";src: url('Fonts/MaterialSymbolsRounded-VariableFont_FILL\,GRAD\,opsz\,wght.ttf');}
+.material-symbols-rounded {font-family: 'Material Symbols Rounded';-moz-font-feature-settings: 'liga';-moz-osx-font-smoothing: grayscale;display: inline-block;}
 html,body{
     padding: 0;
     margin: 0;
@@ -53,8 +52,28 @@ dashboard{
     background-color: #d8d8d8;
     width: 100%;
     display: flex;
+    align-items: center;
     transition: 0.2s;
     padding: 10px 0px;
+}
+popup [io]{
+margin: 0px;
+  transform: translateY(-10px);
+  color: #636363;
+  font-weight: 665;
+  font-size: 15px;
+}
+dashboard button[action] {
+	border-radius: 50px;
+	border: none;
+	background: #0000002b;
+	color: white;
+	font-size: 24px;
+	height: 32px;
+    cursor: pointer;
+	width: 32px;
+	align-items: center;
+	display: flex;
 }
 dashboard[visible=no]{
 transform: translateY(-100%);
@@ -62,8 +81,9 @@ transform: translateY(-100%);
 [float=float]{
     position: fixed;
     top: 10px;
+    z-index: +999;
     left: 10px;
-transform: translateY(200%);
+transform:translate(-77px,calc(100% + 10px));
 }
 popup button {
 	background: #00000012;
@@ -77,9 +97,6 @@ popup button {
 popup button[selected]{
 	background: #14141440;
 
-}
-dashboard button[selected]{
-    background: rgba(0, 0, 0, 0.247);
 }
 cover {
 	position: relative;
@@ -116,7 +133,7 @@ popup [warning]{
     perspective: 1000px;
     transform-style: preserve-3d;
 }
-popup[devices] p:not([warning]){
+popup[devices] p:not([warning], [io] ){
   padding: 4px 15px;
   margin: 2px 0px;
   font-size: 14px;
@@ -161,7 +178,17 @@ notification img{
     height: 44px;
   margin-right: 8px;
 }
+[action]:active span{
+    font-weight: 250;
+    transition: 0.2s;
+}
+[action]{transition: 0.1s}
+dashboard button[filled] span{
+    font-variation-settings: "FILL" 1 !important;
+}
 [level=error]{
     border: 1px solid #ff00002e;background: #ffbaba47;
   box-shadow: 0px 4px 10px #0404044d;
 }
+[logo]{height: 22px;padding-left: 10px;}
+flexR{display: flex;width: 100%;justify-content: center;transform: translateX(-87px);gap: 2px;}
