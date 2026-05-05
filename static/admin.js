@@ -45,26 +45,37 @@ window.addEventListener('DOMContentLoaded',function(){
         notification({title:data.title,body:data.body,icon:data.icon,level:data.level,timeout:data.timeout})
     })
     //layout
-    let mainlayoutbt=['hide ribbon','color balance','frame rate','devices','saved folder','#','$start recording','capture','flip camera','advanced']
+    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios','advanced|settings']
+    let flx=document.createElement('flexR')
     mainlayoutbt.forEach(bt=>{
         if(bt.trim()!='#'){
          let a=document.createElement('button')
-         let cleanname=bt.replaceAll(' ','-').replaceAll('$','')
+         let cleanname=bt.replaceAll(' ','-').replaceAll('$','').split('|')[0].replaceAll('1','')
          a.setAttribute('action',cleanname)
-         a.title=bt.replaceAll('$','')
          if(bt.slice(0,1)=='$'){
             a.setAttribute('primary','')
          }
-         a.innerText=bt.replaceAll('$','')
-         document.querySelector('dashboard').appendChild(a)
+         if(bt.includes('1')){
+            a.setAttribute('filled','')
+         }
+         if(bt.includes('|')){
+            let ic=document.createElement('span')
+            ic.className='material-symbols-rounded'
+            ic.innerText=`${bt.split('|')[1].toUpperCase()}`
+            a.appendChild(ic)
+         }
+         a.title=bt.replaceAll('$','').split('|')[0].replaceAll('1','')
+         flx.appendChild(a)
         }
         else{
          let br=document.createElement('space')
-         document.querySelector('dashboard').appendChild(br)
+         flx.appendChild(br)
         }
     })
+    document.querySelector('dashboard').appendChild(flx)
+
     S.on('Stream',function(stream){
-        if(stream.stream==1){
+        if(stream.stream==0){
         document.querySelectorAll(`[stream='src']`)[0].src=stream.rec
         document.querySelector(`[stream='src']`).style.transform=`rotate(${stream.ori}deg)`
         }
@@ -135,10 +146,14 @@ window.addEventListener('DOMContentLoaded',function(){
                 }
                 let pop=document.createElement('popup')
                 pop.style.left=pos.left+'px'
-                pop.style.top=pos.top+25+'px'
+                pop.style.top=pos.top+35+'px'
                 pop.setAttribute(act,'') 
                 let resetb=document.createElement('button')
                 resetb.innerHTML='reset'
+                let name=document.createElement('p')
+                name.innerText=act.replaceAll('-',' ')
+                name.setAttribute('io','')
+                pop.appendChild(name)
                 let colorin$hue=document.createElement('input')
                 let colorin$sat=document.createElement('input')
                 let colorin$bri=document.createElement('input')
@@ -205,8 +220,12 @@ window.addEventListener('DOMContentLoaded',function(){
                 }
                 let pop=document.createElement('popup')
                 pop.style.left=pos.left+'px'
-                pop.style.top=pos.top+25+'px'
+                pop.style.top=pos.top+35+'px'
                 pop.setAttribute(act,'') 
+                let name=document.createElement('p')
+                name.innerText=act.replaceAll('-',' ')
+                name.setAttribute('io','')
+                pop.appendChild(name)
                 let warning=document.createElement('p')
                 let eco=document.createElement('button')
                 let def=document.createElement('button')
@@ -268,9 +287,12 @@ window.addEventListener('DOMContentLoaded',function(){
                 }
                 let pop=document.createElement('popup')
                 pop.style.left=pos.left+'px'
-                pop.style.top=pos.top+25+'px'
+                pop.style.top=pos.top+35+'px'
                 pop.setAttribute(act,'')
-                console.log(allcams)
+                let name=document.createElement('p')
+                name.innerText=act.replaceAll('-',' ')
+                name.setAttribute('io','')
+                pop.appendChild(name)
                 if(allcams.length!=0){
                 allcams.forEach(cam=>{
                 let nm=document.createElement('p')
@@ -319,12 +341,12 @@ window.addEventListener('DOMContentLoaded',function(){
                         console.log(recstate)
                         if(recstate=='False'){
                             S.emit('Record',{command:"start",stream:0})
-                            ac.innerText='Stop recording'
+                            ac.querySelector('span').innerText='stop'
                             //add notification
                          }
                          else{
                             S.emit('Record',{command:"stop",stream:0})
-                            ac.innerText='Start recording'
+                            ac.querySelector('span').innerText='play_arrow'
                         }
                     })
 
