@@ -9,13 +9,18 @@ from datetime import datetime
 import subprocess
 
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
+
 MAINUSERSDI={}
-ALLUSERS=[] #keep this
+ALLUSERS=[]
+RECORDED_DATA=[]
+
 S=SocketIO(main,cors_allowed_origins="*")
+
 LASTFrame='__not-found__'
 orientation='up'
-stream1using=False
-stream2using=False
+RecordingRunning=False
+CurrentRecordStream=False
+LASTrecStamp=None
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
@@ -38,7 +43,8 @@ def leaveev(user):
     for i in ALLUSERS:
        print(i)
     S.emit('CAMlist',ALLUSERS)  
-
+def AdminNotification(title='',body='',icon='__none__',timeout=4,level='info'):
+   S.emit('AdminNotification',{'title':title,"body":body,"icon":icon,"timeout":timeout,"level":level})
 def UserError(user,title,description): # DONT USE YET
    S.emit('notification',{"user":user,"title":title,'description':description}) #change to S.to SID
 
@@ -57,6 +63,11 @@ def HostNotification(title,description,fallbackicon=0x40):
 @S.on('Process')
 def mainroute(data):
    global LASTFrame
+   if RecordingRunning:
+      if data.get("stream")==CurrentRecordStream:
+         header,base=data.get('rec').split(',')
+         RECORDED_DATA.append(base)
+         
    if data!=LASTFrame:
      S.emit('Stream',data)
      LASTFrame=data
@@ -88,7 +99,9 @@ def revive(user):
 def ask(q):
    if q=='suggStream':
       return {'stream': len(MAINUSERSDI)}
-   
+   elif q=='ifRecRunning':
+      print(str(RecordingRunning))
+      return {'running': str(RecordingRunning)} 
 @S.on('OpenFolder')
 def openF(fl):
     if sys.platform=='win32':
@@ -131,5 +144,32 @@ def openS(path):
 def openD(path):
     os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",path))
 
+@S.on('Record')
+def record(data):
+    global RecordingRunning,RECORDED_DATA,CurrentRecordStream,LASTrecStamp
+    if data.get('command')=='start':
+       if not RecordingRunning:
+            print('Start rec')
+            CurrentRecordStream=data.get('stream')
+            RecordingRunning=True
+            LASTrecStamp=datetime.now()
+
+       else: 
+         RECORDED_DATA.clear()
+    elif data.get('command')=='stop':
+        if RecordingRunning: 
+           RecordingRunning=False
+           print('stop')
+           AdminNotification(title='Processing recorded video',body='Recorded video is currently processing.',timeout=3)
+           tempbinaryrecs=bytearray()
+           for frame in RECORDED_DATA:
+              eachfr=base64.b64decode(frame)
+              tempbinaryrecs.extend(eachfr)
+           
+           with open(f'{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}',"wb") as vid:
+             vid.write(tempbinaryrecs)             
+           
+           AdminNotification(title='Video saved',body=f'Video saved to <span onclick="openDir({'Captures'})">Captures/</span><span button="open" onclick="{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}">open</span>',timeout=3)
+        
 if(__name__=="__main__"):
     S.run(main,debug=True,host='0.0.0.0',port='84',ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
