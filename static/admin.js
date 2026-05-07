@@ -44,6 +44,11 @@ window.addEventListener('DOMContentLoaded',function(){
     S.on('AdminNotification',function(data){
         notification({title:data.title,body:data.body,icon:data.icon,level:data.level,timeout:data.timeout})
     })
+    //first time
+    if(!localStorage.getItem('tutorial')){
+        let full=document.createElement('full')
+        
+    }
     //layout
     let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios','advanced|settings']
     let flx=document.createElement('flexR')
@@ -77,7 +82,8 @@ window.addEventListener('DOMContentLoaded',function(){
     S.on('Stream',function(stream){
         if(stream.stream==0){
         document.querySelectorAll(`[stream='src']`)[0].src=stream.rec
-        document.querySelector(`[stream='src']`).style.transform=`rotate(${stream.ori}deg)`
+        document.querySelectorAll(`[stream='src']`)[0].setAttribute('from',stream.camname)
+        document.querySelector(`[stream='src']`).style.transform=`rotate(${stream.ori}deg)` //change this to pref()
         }
         else{
             if(!document.querySelectorAll(`[stream='src'][c='${stream.stream}']`)[0]){
@@ -85,10 +91,12 @@ window.addEventListener('DOMContentLoaded',function(){
                 crStr.setAttribute('stream','src')
                 crStr.setAttribute('c',stream.stream)
                 crStr.src=stream.rec
+                crStr.setAttribute('from',stream.camname)
                 document.querySelector('cover').appendChild(crStr)
             }
             else{
                 document.querySelectorAll(`[stream='src'][c='${stream.stream}']`)[0].src=stream.rec
+                document.querySelectorAll(`[stream='src'][c='${stream.stream}']`)[0].setAttribute('from',stream.camname)
             }
         }
     })
@@ -118,10 +126,17 @@ window.addEventListener('DOMContentLoaded',function(){
             else if(act=='hide-ribbon'){
                 let dash=document.querySelector('dashboard')
                if(dash.getAttribute('visible')=='yuh'){
+                ac.querySelector('span').innerText='keyboard_arrow_down'
                 dash.setAttribute(`visible`,'no')
                 ac.setAttribute('float','float')
+                if(document.querySelector('popup')){
+                    document.querySelector('popup').setAttribute('closing','')
+                    await sleep(300)
+                    document.querySelector('popup').remove()
+                }
                }
                else{
+                ac.querySelector('span').innerText='keyboard_arrow_up'
                 dash.setAttribute(`visible`,'yuh')
                 ac.setAttribute('float','no')
                }
@@ -146,7 +161,7 @@ window.addEventListener('DOMContentLoaded',function(){
                 }
                 let pop=document.createElement('popup')
                 pop.style.left=pos.left+'px'
-                pop.style.top=pos.top+35+'px'
+                pop.style.top=pos.top+41+'px'
                 pop.setAttribute(act,'') 
                 let resetb=document.createElement('button')
                 resetb.innerHTML='reset'
@@ -220,7 +235,7 @@ window.addEventListener('DOMContentLoaded',function(){
                 }
                 let pop=document.createElement('popup')
                 pop.style.left=pos.left+'px'
-                pop.style.top=pos.top+35+'px'
+                pop.style.top=pos.top+41+'px'
                 pop.setAttribute(act,'') 
                 let name=document.createElement('p')
                 name.innerText=act.replaceAll('-',' ')
@@ -287,7 +302,7 @@ window.addEventListener('DOMContentLoaded',function(){
                 }
                 let pop=document.createElement('popup')
                 pop.style.left=pos.left+'px'
-                pop.style.top=pos.top+35+'px'
+                pop.style.top=pos.top+41+'px'
                 pop.setAttribute(act,'')
                 let name=document.createElement('p')
                 name.innerText=act.replaceAll('-',' ')
@@ -315,6 +330,7 @@ window.addEventListener('DOMContentLoaded',function(){
             }
 
             else if(act=='capture'){
+                if(allcams.length!=0){
                 document.querySelectorAll('[stream]').forEach(str=>{
                     let maincanv=document.createElement('canvas')
                     let cavget=maincanv.getContext('2d')
@@ -334,7 +350,12 @@ window.addEventListener('DOMContentLoaded',function(){
                     maincanv.toDataURL('image/jpeg')
                 })
             }
+            else{
+                notification({title:'No device connected',body:'Cannot take picture : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
+            }
+            }
             else if(act=='start-recording'){
+                if(allcams.length!=0){
                     let recstate
                     S.emit('INFO','ifRecRunning',(st)=>{
                         recstate=st.running
@@ -349,7 +370,10 @@ window.addEventListener('DOMContentLoaded',function(){
                             ac.querySelector('span').innerText='play_arrow'
                         }
                     })
-
+                }
+                else{
+                notification({title:'No device connected',body:'Cannot start recording : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
+                }
             }
         })
     })
@@ -360,13 +384,17 @@ window.addEventListener('DOMContentLoaded',function(){
     }
     //messaging system as message()
     S.on('adminLEAVE',function(user){
-        notification({title:`${user} left`,body:`${user} has left fluxLAN.`,icon:'static/Assets/favicon.png',timeout:4})
+        notification({title:`${user} left`,body:`${user} has left fluxLAN.`,icon:'static/Assets/favicon.png',timeout:2})
         console.log(user)
+        document.querySelectorAll(`[stream='src'][from='${user}']`).forEach(all=>{
+            if(all.getAttribute('c')!=='0'){
+                all.remove()
+            }
+        })
     })
     S.on('adminJOIN',function(user){
         //message(user)
-        notification({title:`${user} joined`,body:`${user} joined.`,icon:'static/Assets/favicon.png',timeout:2})
-        console.log(user)
+        notification({title:`${user} joined`,body:`${user} joined.`,icon:'static/Assets/favicon.png',timeout:3})
     })
 
 })
