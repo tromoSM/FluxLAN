@@ -6,13 +6,29 @@ window.addEventListener('DOMContentLoaded',function(){
     }
     S.on('CAMlist',function(all){
         allcams=all
-        console.log(all)
     })
     window.openS=function(path){
         S.emit('OpenSelected',path)
     }
     window.openDir=function(path){
         S.emit('OpenDir',path)
+    }
+    function cammessage(a){
+        let full=document.createElement('f')
+        let war=document.createElement('p')
+        war.setAttribute('cammsg','')
+        war.innerText='No devices detected'
+        full.appendChild(war)
+        if(a=='show'){
+         if(!document.querySelector('[cammsg]')){
+            document.body.appendChild(full)
+         }
+        }
+        else if(a=='hide'){
+            if(document.querySelector('[cammsg]')){
+             document.querySelectorAll('f').forEach(f=>{f.remove()})
+            }
+        }
     }
     async function notification({level='__info__',title='',body='',icon='__none__',timeout=4}={}){
         let notification=document.createElement('notification')
@@ -80,6 +96,7 @@ window.addEventListener('DOMContentLoaded',function(){
     document.querySelector('dashboard').appendChild(flx)
 
     S.on('Stream',function(stream){
+        cammessage('hide')
         if(stream.stream==0){
         document.querySelectorAll(`[stream='src']`)[0].src=stream.rec
         document.querySelectorAll(`[stream='src']`)[0].setAttribute('from',stream.camname)
@@ -390,11 +407,27 @@ window.addEventListener('DOMContentLoaded',function(){
             if(all.getAttribute('c')!=='0'){
                 all.remove()
             }
+            else{
+                all.setAttribute('empty','')
+            }
         })
+        if(allcams.length==0){
+            cammessage('show')
+        }
     })
     S.on('adminJOIN',function(user){
         //message(user)
         notification({title:`${user} joined`,body:`${user} joined.`,icon:'static/Assets/favicon.png',timeout:3})
+        cammessage('hide')
     })
-
+    document.querySelectorAll(`[stream='src']`)[0].addEventListener('load',function(){
+        document.querySelectorAll(`[stream='src']`)[0].removeAttribute('empty')
+        if(allcams.length==0){
+            cammessage('show')
+        }
+    })
+    document.querySelectorAll(`[stream='src']`)[0].addEventListener('error',function(){
+        document.querySelectorAll(`[stream='src']`)[0].setAttribute('empty','')
+        cammessage('show')
+    })
 })
