@@ -7,6 +7,8 @@ import ctypes
 import base64
 from datetime import datetime
 import subprocess
+import platformdirs
+import json
 
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 
@@ -25,8 +27,12 @@ LASTrecStamp=None
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
+
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN','Captures')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Captures"))
+
+maindatadir=platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM')   
+os.makedirs(maindatadir,exist_ok=True)
 
 # GLOBAL UI FUNCc
 def joinev(user):
@@ -94,6 +100,10 @@ def left():
     leaveev(curUser)      
     MAINUSERSDI.pop(request.sid,None)
 
+@S.on('connect')
+def info():
+       S.emit('CAMlist',ALLUSERS)  
+
 @S.on('CamMinimize')
 def min(user):
     leaveev(user)
@@ -105,6 +115,7 @@ def revive(user):
 @S.on('INFO')
 def ask(q):
    if q=='suggStream':
+      S.emit('CAMlist',ALLUSERS)  
       return {'stream': len(MAINUSERSDI)}
    elif q=='ifRecRunning':
       print(str(RecordingRunning))
@@ -177,7 +188,21 @@ def record(data):
            with open(f'{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}',"wb") as vid:
              vid.write(tempbinaryrecs)             
            
-           AdminNotification(title='Video saved',body=f'Video saved to <span onclick="openDir({'Captures'})">Captures/</span><span button="open" onclick="{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}">open</span>',timeout=3)
+           AdminNotification(title='Video saved',body=f'Video saved to <span onclick="openDir(`{'Captures'}`)">Captures/</span><span button="open" onclick="{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}">open</span>',timeout='never')
+
+@S.on('hostpref') #dont use
+def pref(com):
+    prefr=com.get("pref")
+    with open(os.path.normpath(os.path.join(platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM'),'preferences.json')),'r') as pref:
+     saved=json.load(pref)
+    command=com.get('command')
+    if command=='get':
+        saved.get(prefr)
+    elif command=='set':
+      saved.append({str(prefr):str(com.get('value'))})
+      with open(os.path.normpath(os.path.join(platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM'),'preferences.json')),'w') as pref:
+       json.dump(saved,pref)
+
 
 sys.excepthook=onerr     
 if(__name__=="__main__"):
