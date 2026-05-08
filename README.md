@@ -12,7 +12,7 @@ Turn your old phones into a local camera network
  - [x] Multiple streams
  - [x] Alert system
  - [x] Battery status
- - [ ] Capture when
+ - [x] Capture when
  - [x] Record
  - [x] List devices
  - [ ] ~~hover to zoom~~
