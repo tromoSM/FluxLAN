@@ -15,6 +15,7 @@ popup{
     display: flex;
     padding: 20px 10px;
     flex-direction: column;
+    z-index: +90;
     border-radius: 0px 0px 15px 15px;
     animation: open-popup 0.2s;
 }
@@ -195,3 +196,9 @@ dashboard button[filled] span{
 f{display: flex;width: 100%;height: 100%;position:fixed;top: 0;left: 0;justify-content: center;align-items: center;z-index: +88;pointer-events: none;}
 [logo]{height: 22px;padding-left: 10px;}
 flexR{display: flex;width: 100%;justify-content: center;transform: translateX(-87px);gap: 2px;}
+relborder {display: inline-block;position: relative;}
+hvpanel{display: block;position: absolute;top: 10px;right: 10px;z-index: +99;color: white;font-size: 24px;text-shadow: 0px 0px 10px #00000054;transform: translateY(10px);opacity: 0;transition: 0.2s;}
+relborder:hover hvpanel{transform: translateY(0px);opacity: 1;}
+tooltip{box-shadow: 0px 2px 5px #0000003d;position: absolute;z-index: +9999;pointer-events: none;background-color: rgba(255, 255, 255, 0.705);backdrop-filter: blur(25px);-webkit-backdrop-filter: blur(25px);border-radius: 7px;font-size: 11px; color: #4e4e4e;padding: 1px 5px;animation: open-tool 0.2s ;transition: 0.2s;transform: translateY(0px);opacity: 1;}
+@keyframes open-tool{from{transform: translateY(10px);opacity: 0;}to{opacity: 1;transform: translate(0px);}}
+tooltip[closing]{transform: translateY(10px);opacity: 0;animation: none;}
