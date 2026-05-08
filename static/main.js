@@ -1,5 +1,5 @@
-window.addEventListener('DOMContentLoaded',function(){
-let mainSt={rec:'__not-found__',ori:0,stream:1}
+window.addEventListener('DOMContentLoaded',async function(){
+let mainSt={rec:'__not-found__',ori:0,stream:1,camname:'__not-found__'}
 let afacingMode
 if(!localStorage.getItem('fps')){
     localStorage.setItem('fps',50)
@@ -74,6 +74,25 @@ else{
     orin+=90
 }
 })
+async function checkBattery(){
+    if('getBattery'in navigator){
+        let bat=await navigator.getBattery()
+        return bat.level*100
+    } 
+    else{
+        return '__not-supported__'
+    } 
+}
+S.emit("BatteryChange",{"user": username,"status": await checkBattery()})        
+localStorage.setItem('battery',await checkBattery())
+if(localStorage.getItem('battery')!='__not-supported__'){
+    setInterval(async ()=>{
+    S.emit("BatteryChange",{"user": username,"status":await checkBattery()})        
+    },300000)
+}
+else{
+    S.emit("BatteryChange",{"user": username,"status": "__not-supported__"})  
+}
 async function unRStream(){
 if(!navigator.mediaDevices||navigator.mediaDevices==undefined){
   mainSt={rec:'__not-allowed__'} 
@@ -92,7 +111,7 @@ else{
      CanV.drawImage(mainVD,0,0,mainC.width,mainC.height)
      let imim=mainC.toDataURL('image/jpeg',0.6)
      console.log(imim)
-     mainSt={rec:imim,ori:orin,stream:stream}
+     mainSt={rec:imim,ori:orin,stream:stream,camname:username}
      S.emit('Process',mainSt)
      },fps)
      
