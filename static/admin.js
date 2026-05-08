@@ -85,7 +85,7 @@ window.addEventListener('DOMContentLoaded',function(){
             ic.innerText=`${bt.split('|')[1].toUpperCase()}`
             a.appendChild(ic)
          }
-         a.title=bt.replaceAll('$','').split('|')[0].replaceAll('1','')
+         a.setAttribute('tooltip',bt.replaceAll('$','').split('|')[0].replaceAll('1',''))
          flx.appendChild(a)
         }
         else{
@@ -109,7 +109,14 @@ window.addEventListener('DOMContentLoaded',function(){
                 crStr.setAttribute('c',stream.stream)
                 crStr.src=stream.rec
                 crStr.setAttribute('from',stream.camname)
-                document.querySelector('cover').appendChild(crStr)
+                let rel=document.createElement('relborder')
+                let strpanel=document.createElement('hvpanel')
+                let battery=document.createElement('span')
+                battery.setAttribute('battery','')
+                battery.className='material-symbols-rounded'
+                strpanel.appendChild(battery)
+                rel.append(crStr,strpanel)
+                document.querySelector('cover').appendChild(rel)
             }
             else{
                 document.querySelectorAll(`[stream='src'][c='${stream.stream}']`)[0].src=stream.rec
@@ -429,5 +436,42 @@ window.addEventListener('DOMContentLoaded',function(){
     document.querySelectorAll(`[stream='src']`)[0].addEventListener('error',function(){
         document.querySelectorAll(`[stream='src']`)[0].setAttribute('empty','')
         cammessage('show')
+    })
+    function refreshTooltip(){
+        
+    document.querySelectorAll('[tooltip]').forEach(yo=>{
+        yo.addEventListener('mouseenter',function(){
+            let pos=yo.getBoundingClientRect()
+            let title=document.createElement('tooltip')
+            title.innerText=yo.getAttribute('tooltip')
+            title.style.left=pos.left+'px'
+            title.style.top=pos.top+pos.height+'px'
+            document.body.appendChild(title)
+        })
+        yo.addEventListener('mouseleave',async function(){
+        document.querySelectorAll('tooltip').forEach(async y=>{
+            y.setAttribute('closing','')
+            await sleep(200)
+            y.remove()
+        })
+    })
+    })
+    }
+    refreshTooltip()
+    S.on('adminBatteryChange',function(data){
+        console.log(`user ${data.user} is at ${data.status}%`) 
+        let battery=document.querySelector(`[stream][from="${data.user}"]`).closest('relborder').querySelector('hvpanel').querySelector('span[battery]')
+        if(battery){
+        if(data.status!=='__not-supported__'){
+            let lev=Math.min(7,Math.max(1,Math.ceil(parseInt(data.status)/100*7)))
+            battery.innerText=`battery_android_frame_${lev}`
+            battery.setAttribute('tooltip',`${data.status}%`)
+        }
+        else{
+            battery.innerText='battery_android_frame_question'
+            battery.setAttribute('tooltip','this device doesnt support this feature')
+        }
+        refreshTooltip()
+       }
     })
 })
