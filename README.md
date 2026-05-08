@@ -11,7 +11,7 @@ Turn your old phones into a local camera network
  - [ ] Grid when multiple cams
  - [x] Multiple streams
  - [x] Alert system
- - [ ] Battery status
+ - [x] Battery status
  - [ ] Capture when
  - [x] Record
  - [x] List devices
