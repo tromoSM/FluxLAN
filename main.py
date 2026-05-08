@@ -203,6 +203,9 @@ def pref(com):
       with open(os.path.normpath(os.path.join(platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM'),'preferences.json')),'w') as pref:
        json.dump(saved,pref)
 
+@S.on('BatteryChange')
+def battery(data):
+   S.emit('adminBatteryChange',data)
 
 sys.excepthook=onerr     
 if(__name__=="__main__"):
