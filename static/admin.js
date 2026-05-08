@@ -60,6 +60,30 @@ window.addEventListener('DOMContentLoaded',function(){
     S.on('AdminNotification',function(data){
         notification({title:data.title,body:data.body,icon:data.icon,level:data.level,timeout:data.timeout})
     })
+    function saveimg(){
+        if(allcams.length!=0){
+                   document.querySelectorAll('[stream]').forEach(str=>{
+                    let maincanv=document.createElement('canvas')
+                    let cavget=maincanv.getContext('2d')
+                    maincanv.width=str.naturalWidth
+                    maincanv.height=str.naturalHeight
+                    if(localStorage.getItem('input-changed')){
+                         cavget.filter=`brightness(${localStorage.getItem('last$$-brightness')}) hue-rotate(${localStorage.getItem('last$$-hue')}deg) saturate(${localStorage.getItem('last$$-saturation')}) contrast(${localStorage.getItem('last$$-contrast')})`
+                    }
+                    else{
+                      cavget.filter='brightness(1)'
+                    }
+                    cavget.drawImage(str,0,0,maincanv.width,maincanv.height)
+                    S.emit('SaveImage',maincanv.toDataURL('image/jpeg'),path=>{
+                        notification({title:"Image saved",body:`Image saved to <span onclick="openDir('${path.dir}')" >${path.dir}/</span><span button='open' onclick="openS('${path.file}')">Open</span>`,timeout:3})
+                    })
+                    maincanv.toDataURL('image/jpeg')
+                    })
+                }
+        else{
+                notification({title:'No device connected',body:'Cannot take picture : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
+            }
+    }
     //first time
     if(!localStorage.getItem('tutorial')){
         let full=document.createElement('full')
@@ -354,28 +378,94 @@ window.addEventListener('DOMContentLoaded',function(){
             }
 
             else if(act=='capture'){
-                if(allcams.length!=0){
-                document.querySelectorAll('[stream]').forEach(str=>{
-                    let maincanv=document.createElement('canvas')
-                    let cavget=maincanv.getContext('2d')
-                    maincanv.width=str.naturalWidth
-                    maincanv.height=str.naturalHeight
-                    if(localStorage.getItem('input-changed')){
-                         cavget.filter=`brightness(${localStorage.getItem('last$$-brightness')}) hue-rotate(${localStorage.getItem('last$$-hue')}deg) saturate(${localStorage.getItem('last$$-saturation')}) contrast(${localStorage.getItem('last$$-contrast')})`
+
+                if(document.querySelector(`popup[${act}]`)){
+                    (async()=>{
+                        await document.querySelector(`popup[${act}]`).setAttribute('closing','')
+                        await sleep(300)
+                        await document.querySelector(`popup[${act}]`).remove()
+                    })()
+                }
+                else{
+                if(document.querySelector(`popup:not([${act}])`)){
+                    document.querySelectorAll(`popup:not([${act}])`).forEach(rm=>{
+                    (async()=>{
+                        await rm.setAttribute('closing','')
+                        await sleep(300)
+                        await rm.remove()
+                    })()
+                    })
+                }
+                let pop=document.createElement('popup')
+                pop.style.left=pos.left+'px'
+                pop.style.top=pos.top+41+'px'
+                pop.setAttribute(act,'')
+                let name=document.createElement('p')
+                name.innerText=act.replaceAll('-',' ')
+                name.setAttribute('io','')
+                pop.appendChild(name)
+                let now=document.createElement('button')
+                now.innerHTML='<span class="material-symbols-rounded">photo_camera</span> take now'
+                let time=document.createElement('p')
+                time.setAttribute('warning','')
+                function refreshtime(){
+                time.innerText=`current time : ${new Date().toLocaleDateString("default",{hour:'2-digit',minute:'2-digit'})}`
+                }
+                refreshtime()
+                setInterval(refreshtime,500)
+                let des=document.createElement('p')
+                des.setAttribute('warning','')
+                des.innerText=`or capture 5 minutes from now`
+                let mainin=document.createElement('input')
+                let up=document.createElement('button')
+                up.innerText='+'
+                let down=document.createElement('button')
+                down.innerText='-'
+                let flexRR=document.createElement('FlexRR')
+                let exc=document.createElement('button')
+                let pred=document.createElement('p')
+                pred.setAttribute('warning','')
+                exc.innerText='✓'
+                mainin.type='number'
+                mainin.max='1440'
+                mainin.min='0'
+                mainin.defaultValue='5'
+                function refreshval(){
+                    if (mainin.value.trim()==''|| isNaN(mainin.value) || mainin.value.includes('-')){
+                      des.innerText=`or capture x minutes from now`
                     }
                     else{
-                      cavget.filter='brightness(1)'
+                      des.innerText=`or capture ${parseInt(mainin.value)} minutes from now`
+                      pred.innerText=`The capture will be taken at ${new Date(Date.now()+(parseInt(mainin.value)*60*1000)).toLocaleTimeString()}`
                     }
-                    cavget.drawImage(str,0,0,maincanv.width,maincanv.height)
-                    console.log(maincanv.toDataURL('image/jpeg'))
-                    S.emit('SaveImage',maincanv.toDataURL('image/jpeg'),path=>{
-                        notification({title:"Image saved",body:`Image saved to <span onclick="openDir('${path.dir}')" >${path.dir}/</span><span button='open' onclick="openS('${path.file}')">Open</span>`,timeout:3})
-                    })
-                    maincanv.toDataURL('image/jpeg')
+                    if(mainin.value<=1){
+                        down.setAttribute('disabled','')
+                    }
+                    else{
+                        down.removeAttribute('disabled')
+                    }
+                }
+                mainin.addEventListener('input',refreshval)
+                up.addEventListener('click',function(){
+                    mainin.value++
+                    refreshval()
                 })
-            }
-            else{
-                notification({title:'No device connected',body:'Cannot take picture : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
+                down.addEventListener('click',function(){
+                    mainin.value--
+                    refreshval()
+                })
+                exc.addEventListener('click',function(){
+                    ac.setAttribute('due','')
+                    setTimeout(()=>{
+                        ac.removeAttribute('due')
+                        saveimg()
+                    },(parseInt(mainin.value)*60*1000))
+                    console.log('Capture event was executed')
+                })
+                flexRR.append(mainin,up,down,exc)
+                pop.append(now,des,flexRR,pred,time)
+                document.body.append(pop)
+                now.addEventListener('click',saveimg)
             }
             }
             else if(act=='start-recording'){
