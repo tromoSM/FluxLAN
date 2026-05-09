@@ -28,6 +28,11 @@ let contx$$RUNNING=false
 let orin=0
 const S=io()
 let stream
+S.on('ClientClear',async function(a){
+S.emit('ClearedAll',username)
+await localStorage.clear()
+window.location.reload()
+})
 S.emit('INFO','suggStream',ans=>{
     stream=ans.stream
 })
@@ -123,3 +128,4 @@ else{
 }
 unRStream()
 })
+
