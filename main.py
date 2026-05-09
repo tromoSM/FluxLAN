@@ -9,6 +9,12 @@ from datetime import datetime
 import subprocess
 import platformdirs
 import json
+import signal
+
+APP_VERSION='v0.9 pre'
+APP_VERSION_RELEASE=1
+APP_DATE='2026/05'
+APP_UPDATECHK_ROOT='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/repos/FLUXLAN/manifest.json'
 
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 
@@ -114,17 +120,20 @@ def revive(user):
 
 @S.on('INFO')
 def ask(q):
+   global RecordRunning,MAINUSERDI,ALLUSERS,APP_DATE,APP_UPDATECHK_ROOT,APP_VERSION,APP_VERSION_RELEASE
    if q=='suggStream':
       S.emit('CAMlist',ALLUSERS)  
       return {'stream': len(MAINUSERSDI)}
    elif q=='ifRecRunning':
-      print(str(RecordingRunning))
-      return {'running': str(RecordingRunning)} 
+      return {'running': str(RecordingRunning)}
+   elif q=='about':
+      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE)}
 @S.on('OpenFolder')
 def openF(fl):
     if sys.platform=='win32':
        if fl=='user/Pictures/app':
         os.startfile(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
+        
 @main.route('/')
 def web():
  return render_template('index.html')
@@ -205,7 +214,23 @@ def pref(com):
 
 @S.on('BatteryChange')
 def battery(data):
-   S.emit('adminBatteryChange',data)
+   S.emit('adminBatteryChange',data) 
+
+@S.on('ClearAll')
+def clear(e):
+   S.emit('ClientClear','')
+
+@S.on('ClearedAll')
+def cleared(user):
+   S.emit('AdminCleared','')
+   AdminNotification(title=f"{user}'s localstorage is being cleared",body=f"{user}'s saved preferences and usernames are being cleared",timeout=5,level='_info_')
+
+@S.on('CloseSelf')
+def close(ver):
+   if(ver=='verified'):
+    AdminNotification(title='FluxLAN is closing',body='FluxLAN will be closed in a minute',timeout="never")
+    S.emit('closing','normal')
+    os.kill(os.getpid(),signal.SIGINT)
 
 sys.excepthook=onerr     
 if(__name__=="__main__"):
