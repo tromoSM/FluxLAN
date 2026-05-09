@@ -2,16 +2,15 @@
 @font-face{font-family: "Material Symbols Rounded";src: url('Fonts/MaterialSymbolsRounded-VariableFont_FILL\,GRAD\,opsz\,wght.ttf');}
 .material-symbols-rounded {font-family: 'Material Symbols Rounded';-moz-font-feature-settings: 'liga';-moz-osx-font-smoothing: grayscale;display: inline-block;}
 html,body{
-    padding: 0;
-    margin: 0;
-    overflow-x: hidden;
-    font-family: main-ui;
+    padding: 0;margin: 0;overflow-x: hidden;font-family: main-ui;
 }
 button{font-family: inherit;}
+a:href,a:link,a:visited,a{color: inherit !important;}
+:root{--backdrop-bg:#d8d8d8c5;--backdrop-bg-nonres:#d8d8d8;}
 popup{
     width: fit-content;
     position: absolute;
-    background-color: #d8d8d8c5;
+    background-color: var(--backdrop-bg-nonres);
     display: flex;
     padding: 20px 10px;
     flex-direction: column;
@@ -51,8 +50,9 @@ full{
     flex-direction: column;
 }
 dashboard{
-    background-color: #d8d8d8;
+    background-color: var(--backdrop-bg-nonres);
     width: 100%;
+    backdrop-filter: blur(40px);-webkit-backdrop-filter: blur(40px);
     display: flex;
     align-items: center;
     transition: 0.2s;
@@ -111,7 +111,7 @@ hvzoom{
 popup[frame-rate] [warning]{
 width: 247px;
 }
-popup [warning]{
+[warning]{
   font-size: 12px;
   padding: 0px;
   margin: 0;
@@ -167,9 +167,9 @@ notification[closing]{
     transform: translateX(50px);opacity: 0;
 }
 flexcol p{font-size: 12px;}
-flexcol *{
-    padding: 0;margin: 0;
-}
+flexcol *,flexc *{padding: 0;margin: 0;}
+flexc{display: flex;flex-direction: column;margin-left: 11px;}
+ul{margin-left: 17px;color: #919191;font-size: 13px;margin-top: 8px;}
 notification img{
     height: 44px;
   margin-right: 8px;
@@ -187,9 +187,13 @@ dashboard button[filled] span{
     border: 1px solid #ff00002e;background: #ffbaba47;
   box-shadow: 0px 4px 10px #0404044d;
 }
-f{display: flex;width: 100%;height: 100%;position:fixed;top: 0;left: 0;justify-content: center;align-items: center;z-index: +88;pointer-events: none;}
+f{display: flex;width: 100%;height:calc(100% - 52px);position:fixed;top: 52px;left: 0;justify-content: center;align-items: center;z-index: +88;}
+[nonrec]{pointer-events: none;top: 0;height: 100%;}
+flpop[closing]{transform: scale(0.8);opacity: 0;}
+scrollable{display: flex;flex-direction: column;overflow-y: scroll;scrollbar-width: thin;width: 100%;height: 100%;}
+flpop{display: flex;z-index: 90;flex-direction: column;background-color: var(--backdrop-bg-nonres);width: 45%;height: 85%;transition: 0.2s;position: relative;border-radius: 33px; backdrop-filter: blur(40px);-webkit-backdrop-filter: blur(40px);padding: 18px;box-sizing: border-box;}
 [logo]{height: 22px;padding-left: 10px;}
-flexR{display: flex;width: 100%;justify-content: center;transform: translateX(-87px);gap: 2px;}
+flexR{display: flex;width: 100%;justify-content: center;transform: translateX(-87px);gap: 2px;z-index: +90;}
 relborder {display: inline-block;position: relative;}
 hvpanel{display: block;position: absolute;top: 10px;right: 10px;z-index: +99;color: white;font-size: 24px;text-shadow: 0px 0px 10px #00000054;transform: translateY(10px);opacity: 0;transition: 0.2s;}
 relborder:hover hvpanel{transform: translateY(0px);opacity: 1;}
@@ -199,7 +203,7 @@ tooltip[closing]{transform: translateY(10px);opacity: 0;animation: none;}
 FlexRR{display: flex;gap: 2px;margin-top: 5px;}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none;-moz-appearance: none;appearance: none;margin: 0; 
 }input[type=number] {-moz-appearance: textfield;background: #00000024;border: none;border-radius: 50px;padding: 4px;}
-flexrr *{height: 100%;width: 100%;font-family: inherit;}
+flexrr:not([update]) *{height: 100%;width: 100%;font-family: inherit;}
 flexrr input{width: 85%;}
 flexrr button {flex-shrink: 2;}
 popup button:active{transform: scale(1.05);filter: brightness(1.1);transition: 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);}
@@ -208,3 +212,10 @@ popup button:active{transform: scale(1.05);filter: brightness(1.1);transition: 0
 button[due]{background-color: rgb(34, 34, 34) !important;color: white !important;position: relative;z-index: 0;overflow: hidden;}
 button[due]::before{content: '';left: 0;top: 0;width: 100%;height: 100%;position: absolute;background: rgba(255, 255, 255, 0.342);z-index: -1;border-radius: 50px;animation: inf-due 1.5s infinite;}
 @keyframes inf-due{from{transform: scale(0);opacity: 0;}50%{transform: scale(1);opacity: 1;}to{transform: scale(2);opacity: 0;}}
+@supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {popup,dashboard,flpop{background: var(--backdrop-bg);}}
+flexrr[update] button,flexrr[cache] button{background: #0071e3;cursor: pointer;color: white;flex-shrink: 1 !important;border: none;width: fit-content;height:fit-content;border-radius: 6px;padding: 5px 9px;align-items: first baseline;}
+seperator{display: block;width: 100%;background: #d4d1d1;margin: 20px 0px;height: 1px;}
+[uSureBoutit]{background:#e33a31 !important;}
+button[busy]{position: relative;overflow: hidden;}
+button[busy]::before{filter: blur(10px); width: 100%;height: 100%;content: '';position: absolute;top: 0;left: 0;background: rgba(255, 255, 255, 0.432);z-index: -1;animation: busy 3s linear infinite ;}
+@keyframes busy{from{width: 0%;transform: translateX(0%);opacity: 0 !important;}50%{width: 100%;opacity: 0.5;}99.9%{transform: translateX(400%);width: 0%;opacity: 0;}to{opacity: 0;transform: translateX(0%);width: 0%;}}
