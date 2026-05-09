@@ -13,8 +13,16 @@ window.addEventListener('DOMContentLoaded',function(){
     window.openDir=function(path){
         S.emit('OpenDir',path)
     }
+    let UPDATECHKROOT=''
+    S.emit('INFO','about',(app)=>{
+        window.FluxLAN_version=app.version
+        window.FluxLAN_version_release=app.version_release
+        window.FluxLAN_release_date=app.date
+        UPDATECHKROOT=app.updatechk_root
+    })
     function cammessage(a){
         let full=document.createElement('f')
+        full.setAttribute('nonrec','')
         let war=document.createElement('p')
         war.setAttribute('cammsg','')
         war.innerText='No devices detected'
@@ -26,7 +34,7 @@ window.addEventListener('DOMContentLoaded',function(){
         }
         else if(a=='hide'){
             if(document.querySelector('[cammsg]')){
-             document.querySelectorAll('f').forEach(f=>{f.remove()})
+             document.querySelectorAll('[nonrec]').forEach(f=>{f.remove()})
             }
         }
     }
@@ -90,7 +98,7 @@ window.addEventListener('DOMContentLoaded',function(){
         
     }
     //layout
-    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios','advanced|settings']
+    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios','advanced|info']
     let flx=document.createElement('flexR')
     mainlayoutbt.forEach(bt=>{
         if(bt.trim()!='#'){
@@ -488,6 +496,127 @@ window.addEventListener('DOMContentLoaded',function(){
                 else{
                 notification({title:'No device connected',body:'Cannot start recording : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
                 }
+            }
+
+            else if(act='advanced'){
+                if(document.querySelector('flpop')){
+                    document.querySelectorAll('flpop').forEach(async pop=>{
+                        pop.setAttribute('closing','')
+                        await sleep(200)
+                        pop.closest('f').remove()
+                    })
+                }
+                else{
+                 let full=document.createElement('f')
+                 let infull=document.createElement('flpop')
+                 infull.setAttribute('closing','')
+                 let inscroll=document.createElement('scrollable')
+                 infull.appendChild(inscroll)
+                 let imim=document.createElement('img')
+                 imim.src='/static/Assets/logo.png'
+                 let infobar=document.createElement('p')
+                 infobar.setAttribute('warning','')
+                 if(UPDATECHKROOT!=''){
+                    infobar.innerText=`${window.FluxLAN_version} ${window.FluxLAN_release_date} `
+                 }
+                 else{window.location.reload()}
+                 let flexxr=document.createElement('flexrr')
+                 flexxr.setAttribute('update','')
+                 let chkupdate=document.createElement('button')
+                 chkupdate.innerText='Check for updates'
+                 let updatemsg=document.createElement('p')
+                 let updateFeatures=document.createElement('ul')
+                 let flexC=document.createElement('flexc')
+                 flexC.append(updatemsg,updateFeatures)
+                 flexxr.append(chkupdate,flexC)
+                 let seperatorS=document.createElement('seperator')
+                 seperatorS.setAttribute('small','')
+                 let flexxra=document.createElement('flexrr')
+                 let clearall=document.createElement('button')
+                 let shutall=document.createElement('button')
+                 shutall.innerText='Close FluxLAN'
+                 shutall.setAttribute('uSureBoutit','')
+                 clearall.setAttribute('warn','')
+                 clearall.innerText='clear localStorage'
+                 flexxra.append(clearall,shutall)
+                 // add openlog button
+                 flexxra.setAttribute('cache','')
+                 let footer=document.createElement('flexrr')
+                 let copyright=document.createElement('p')
+                 copyright.setAttribute('warning','')
+                 copyright.innerHTML='© 2026 tromoSM. Licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0">apache 2.0</a>. FluxLAN is open-source • <a href="https://github.com/tromoSM/FluxLAN">contribute here</a>'
+                 footer.append(copyright)
+                 inscroll.append(imim,infobar,flexxr,seperatorS,flexxra,footer)
+                 full.appendChild(infull)
+                 document.body.append(full)
+                 await sleep(200)
+                 infull.removeAttribute('closing','')
+                 
+
+                chkupdate.addEventListener('click',async function(){
+                 fetch(UPDATECHKROOT).then(n=>
+                  n.json()).then(async app=>{
+                    if(app.main.version_release>window.FluxLAN_version_release){
+                        chkupdate.innerText='Download installer'
+                        chkupdate.addEventListener('click',async function(){
+                            chkupdate.setAttribute('busy','')
+                            chkupdate.innerText='Downloading'
+                            chkupdate.setAttribute('disabled','')
+                            let tempdown=document.createElement('a')
+                            tempdown.href=app.update.update_url
+                            tempdown.style.display='none'
+                            document.body.appendChild(tempdown)
+                            tempdown.click()
+                            await sleep(1000)
+                            chkupdate.removeAttribute('busy')
+                            chkupdate.innerText='Downloaded'
+                        })
+                        updatemsg.innerHTML=`Update available : <strong>${app.main.version}</strong>(${app.update.update_date})`
+                        if(app.update.security_patch){
+                        updatemsg.innerHTML=`Update available : <strong>${app.main.version}</strong>(${app.update.update_date}) - <span style='color:#f55;'>security patch</span>`
+                        }
+                        await updateFeatures.querySelectorAll('li').forEach(async li=>{
+                           await li.remove()
+                        })
+                        app.update.update_features.forEach(fe=>{
+                            let eachli=document.createElement('li')
+                            eachli.innerText=fe
+                            updateFeatures.appendChild(eachli)
+                        })
+                        
+                    }
+
+                  })
+                })
+                clearall.addEventListener('click',function(){
+                    clearall.setAttribute('disabled','')
+                    clearall.setAttribute('busy','')
+                    S.emit('ClearAll','')
+                    S.on('AdminCleared',function(){
+                        if(clearall.hasAttribute('disabled')){
+                            clearall.removeAttribute('disabled')
+                        }
+                    })
+
+                })
+                
+                shutall.addEventListener('click',function(){
+                    S.emit('CloseSelf','verified')
+                    shutall.setAttribute('disabled','')
+                    shutall.setAttribute('busy','')
+                    S.on('closing',function(){
+                        shutall.innerText='Closing FluxLAN'
+                    })
+                    S.on('disconnect',async  function(){
+                        shutall.innerText='Closing FluxLAN'
+                        await sleep(500)
+                        shutall.removeAttribute('busy')
+                        shutall.innerText='FluxLAN is closed'
+                    })
+                })
+                }
+
+
             }
         })
     })
