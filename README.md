@@ -18,4 +18,5 @@ Turn your old phones into a local camera network
  - [ ] ~~hover to zoom~~
  - [ ] Audio support
  - [x] update-check system
+ - [ ] close when low battery
 ###### started on 26.04.23
