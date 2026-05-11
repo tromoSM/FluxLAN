@@ -10,9 +10,11 @@ import subprocess
 import platformdirs
 import json
 import signal
+import numpy
+import cv2
 
 APP_VERSION='v0.9 pre'
-APP_VERSION_RELEASE=1
+APP_VERSION_RELEASE=0
 APP_DATE='2026/05'
 APP_UPDATECHK_ROOT='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/repos/FLUXLAN/manifest.json'
 
@@ -29,6 +31,9 @@ orientation='up'
 RecordingRunning=False
 CurrentRecordStream=False
 LASTrecStamp=None
+MotionDetecting=False
+MotionFrameSkip=0
+MotionFrameLS=None
 
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
@@ -57,6 +62,7 @@ def leaveev(user):
     for i in ALLUSERS:
        print(i)
     S.emit('CAMlist',ALLUSERS)  
+
 def AdminNotification(title='',body='',icon='__none__',timeout=4,level='info'):
    S.emit('AdminNotification',{'title':title,"body":body,"icon":icon,"timeout":timeout,"level":level})
 def UserError(user,title,description): # DONT USE YET
@@ -81,7 +87,7 @@ def onerr(type,value,traceback):
 #---
 @S.on('Process')
 def mainroute(data):
-   global LASTFrame
+   global LASTFrame,MotionFrameSkip
    if RecordingRunning:
       if data.get("stream")==CurrentRecordStream:
          header,base=data.get('rec').split(',')
@@ -89,6 +95,12 @@ def mainroute(data):
          
    if data!=LASTFrame:
      S.emit('Stream',data)
+     if MotionDetecting and MotionFrameSkip==0:
+         MotionDetect()
+     if(MotionFrameSkip!=5):
+        MotionFrameSkip+=1
+     else:
+        MotionFrameSkip=0
      LASTFrame=data
 
 @S.on("join")
@@ -120,7 +132,7 @@ def revive(user):
 
 @S.on('INFO')
 def ask(q):
-   global RecordRunning,MAINUSERDI,ALLUSERS,APP_DATE,APP_UPDATECHK_ROOT,APP_VERSION,APP_VERSION_RELEASE
+   global RecordingRunning,MAINUSERSDI,ALLUSERS,APP_DATE,APP_UPDATECHK_ROOT,APP_VERSION,APP_VERSION_RELEASE
    if q=='suggStream':
       S.emit('CAMlist',ALLUSERS)  
       return {'stream': len(MAINUSERSDI)}
@@ -199,7 +211,7 @@ def record(data):
            
            AdminNotification(title='Video saved',body=f'Video saved to <span onclick="openDir(`{'Captures'}`)">Captures/</span><span button="open" onclick="{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}">open</span>',timeout='never')
 
-@S.on('hostpref') #dont use
+@S.on('hostpref') #dont use (to v1+)
 def pref(com):
     prefr=com.get("pref")
     with open(os.path.normpath(os.path.join(platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM'),'preferences.json')),'r') as pref:
@@ -231,6 +243,37 @@ def close(ver):
     AdminNotification(title='FluxLAN is closing',body='FluxLAN will be closed in a minute',timeout="never")
     S.emit('closing','normal')
     os.kill(os.getpid(),signal.SIGINT)
+
+def MotionDetect():
+      global MotionFrameLS,MotionDetecting,LASTFrame
+      if MotionDetecting:
+            if LASTFrame=="__not-found__":
+               return
+            header,base=LASTFrame.get('rec').split(',')
+            temparr=numpy.frombuffer(base64.b64decode(base),numpy.uint8)
+            eachfr=cv2.imdecode(temparr,cv2.IMREAD_GRAYSCALE)
+            eachfr=cv2.resize(eachfr,(320,180))
+            eachfr=cv2.GaussianBlur(eachfr,(7,7),0)
+            if MotionFrameLS is None:
+               MotionFrameLS=eachfr
+            thrsh=cv2.threshold(cv2.absdiff(MotionFrameLS,eachfr),25,255,cv2.THRESH_BINARY)[1]
+            contrs,_=cv2.findContours(thrsh,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+            
+            for iN in contrs:
+               if cv2.contourArea(iN) > 1200:
+                  print('yo yo who there ') 
+            
+            MotionFrameLS=eachfr
+          
+@S.on('MotionDetection')
+def command(data):
+   global MotionDetecting,MotionFrameSkip,MotionFrameLS
+   if data.get('command')=='start':
+    MotionDetecting=True
+   elif data.get('command')=='stop':
+    MotionDetecting=False
+    MotionFrameLS=None
+    MotionFrameSkip=0
 
 sys.excepthook=onerr     
 if(__name__=="__main__"):
