@@ -5,7 +5,9 @@ html,body{
     padding: 0;margin: 0;overflow-x: hidden;font-family: main-ui;
 }
 button{font-family: inherit;}
-a:href,a:link,a:visited,a{color: inherit !important;}
+a:link,a:visited,a{color: inherit !important;position: relative;}
+a::before{content: '';position: absolute;bottom: 0;left: 0;width: 0%;height: 1px;background-color: rgba(0, 0, 0, 0.397);transition: 0.2s;}
+a:hover::before{width: 100%;}
 :root{--backdrop-bg:#d8d8d8c5;--backdrop-bg-nonres:#d8d8d8;}
 popup{
     width: fit-content;
