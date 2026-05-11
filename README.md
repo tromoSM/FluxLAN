@@ -17,5 +17,5 @@ Turn your old phones into a local camera network
  - [x] List devices
  - [ ] ~~hover to zoom~~
  - [ ] Audio support
-
+ - [x] update-check system
 ###### started on 26.04.23
