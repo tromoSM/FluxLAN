@@ -7,8 +7,8 @@ window.addEventListener('DOMContentLoaded',function(){
     S.on('CAMlist',function(all){
         allcams=all
     })
-    window.openS=function(path){
-        S.emit('OpenSelected',path)
+    window.openS=function(path,folder){
+        S.emit('OpenSelected',{"file":path,"folder":folder})
     }
     window.openDir=function(path){
         S.emit('OpenDir',path)
@@ -83,7 +83,7 @@ window.addEventListener('DOMContentLoaded',function(){
                     }
                     cavget.drawImage(str,0,0,maincanv.width,maincanv.height)
                     S.emit('SaveImage',maincanv.toDataURL('image/jpeg'),path=>{
-                        notification({title:"Image saved",body:`Image saved to <span onclick="openDir('${path.dir}')" >${path.dir}/</span><span button='open' onclick="openS('${path.file}')">Open</span>`,timeout:3})
+                        notification({title:"Image saved",body:`Image saved to <span onclick="openDir('${path.dir}')" >${path.dir}/</span><span button='open' onclick="openS('${path.file}','Captures')">Open</span>`,timeout:3})
                     })
                     maincanv.toDataURL('image/jpeg')
                     })
@@ -98,7 +98,7 @@ window.addEventListener('DOMContentLoaded',function(){
         
     }
     //layout
-    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios','advanced|info']
+    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios',"motion detector|motion_sensor_active",'advanced|info']
     let flx=document.createElement('flexR')
     mainlayoutbt.forEach(bt=>{
         if(bt.trim()!='#'){
@@ -497,7 +497,25 @@ window.addEventListener('DOMContentLoaded',function(){
                 notification({title:'No device connected',body:'Cannot start recording : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
                 }
             }
-
+            else if(act=='motion-detector'){
+                if(allcams.length==0){
+                notification({title:'No device connected',body:'Cannot start motion detector : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
+                    return
+                }
+                if(!localStorage.getItem('motion-detecting')){
+                    localStorage.setItem('motion-detecting','no')
+                }
+                if(localStorage.getItem('motion-detecting')=='no'){
+                    ac.setAttribute('due','')
+                    S.emit('MotionDetection',{command:'start'})
+                    localStorage.setItem('motion-detecting','yes')
+                }
+                else{
+                    ac.removeAttribute('due')
+                    S.emit('MotionDetection',{command:'stop'})
+                    localStorage.setItem('motion-detecting','no')
+                }
+            }
             else if(act='advanced'){
                 if(document.querySelector('flpop')){
                     document.querySelectorAll('flpop').forEach(async pop=>{
