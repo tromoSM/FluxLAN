@@ -19,4 +19,5 @@ Turn your old phones into a local camera network
  - [ ] Audio support
  - [x] update-check system
  - [ ] close when low battery
+ - [ ] Motion detection
 ###### started on 26.04.23
