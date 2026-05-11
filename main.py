@@ -42,7 +42,11 @@ if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN','Captures')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Captures"))
 
+if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected")):
+    os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected"))
+
 maindatadir=platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM')   
+
 os.makedirs(maindatadir,exist_ok=True)
 
 # GLOBAL UI FUNCc
@@ -171,14 +175,16 @@ def save(data):
        im.write(base64.b64decode(base))
     return {"file":str(f"Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}"),'dir':"Captures"}
 @S.on("OpenSelected")
-def openS(path):
+def openS(data):
+ path=data.get('file')
+ folder=data.get('folder')
  if sys.platform=='win32':
    try:
-    subprocess.Popen(f'explorer /select,{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"{path}.jpg"))}') 
+    subprocess.Popen(f'explorer /select,{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.jpg"))}') 
    except Exception as err:
     print(err)
  else: 
-   os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"{path}.jpg"))
+   os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.jpg"))
 
 @S.on('OpenDir')
 def openD(path):
@@ -260,11 +266,14 @@ def MotionDetect():
             contrs,_=cv2.findContours(thrsh,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
             
             for iN in contrs:
-               if cv2.contourArea(iN) > 1200:
-                  print('yo yo who there ') 
-            
+               if cv2.contourArea(iN) > 1200:#make ts adjustable
+                  datetimeX=datetime.now()
+                  #add hostnotiff if pref notifications secr
+                  with open(f'{os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected",f"Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}.jpg")}',"wb") as im:
+                   im.write(base64.b64decode(base))        
+                   AdminNotification(title=f'Motion detected in {LASTFrame.get('camname')}',body=f"""Motion detected in {LASTFrame.get('camname')}. Image captured <span onclick="openDir('Motion detected')">Captures/</span><span button="open" onclick="openS('Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}','Motion detected')">open</span>""",timeout='5')
             MotionFrameLS=eachfr
-          
+
 @S.on('MotionDetection')
 def command(data):
    global MotionDetecting,MotionFrameSkip,MotionFrameLS
