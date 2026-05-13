@@ -603,6 +603,20 @@ window.addEventListener('DOMContentLoaded',function(){
                         })
                         
                     }
+                    else if(app.main.version_release==window.FluxLAN_version_release){
+                        chkupdate.setAttribute('disabled','')
+                        let p=document.createElement('p')
+                        p.innerText='FluxLAN is up to date.'
+                        p.setAttribute('warning','')
+                        flexC.appendChild(p)
+                    }
+                    else if(app.main.version_release<window.FluxLAN_version_release){
+                        chkupdate.setAttribute('disabled','')
+                        let p=document.createElement('p')
+                        p.innerText='FluxLAN is up to date (stable).'
+                        p.setAttribute('warning','')
+                        flexC.appendChild(p)
+                    }
 
                   })
                 })
