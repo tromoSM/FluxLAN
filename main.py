@@ -4,7 +4,7 @@ import os
 import sys
 from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
 import ctypes
-import base64
+import base64c
 from datetime import datetime
 import subprocess
 import platformdirs
@@ -12,19 +12,23 @@ import json
 import signal
 import numpy
 import cv2
+import socket
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
 APP_DATE='2026/05'
 APP_UPDATECHK_ROOT='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/repos/FLUXLAN/manifest.json'
+APP_LINK_LOOKUP='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/root/info.json'
+APP_BUILD='stable'
 
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
+
+S=SocketIO(main,cors_allowed_origins="*")
 
 MAINUSERSDI={}
 ALLUSERS=[]
 RECORDED_DATA=[]
 
-S=SocketIO(main,cors_allowed_origins="*")
 
 LASTFrame='__not-found__'
 orientation='up'
@@ -34,6 +38,7 @@ LASTrecStamp=None
 MotionDetecting=False
 MotionFrameSkip=0
 MotionFrameLS=None
+MainIP='__not-found__'
 
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
@@ -49,7 +54,17 @@ maindatadir=platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM')
 
 os.makedirs(maindatadir,exist_ok=True)
 
+SOCKET=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+try:
+   SOCKET.connect(('8.8.8.8',80))
+   MainIP=SOCKET.getsockname()[0]
+except Exception:
+   MainIP='127.0.0.1'
+finally:
+   SOCKET.close()
 # GLOBAL UI FUNCc
+
+
 def joinev(user):
     if user not in ALLUSERS:
      ALLUSERS.append(user)
@@ -136,14 +151,17 @@ def revive(user):
 
 @S.on('INFO')
 def ask(q):
-   global RecordingRunning,MAINUSERSDI,ALLUSERS,APP_DATE,APP_UPDATECHK_ROOT,APP_VERSION,APP_VERSION_RELEASE
+   global RecordingRunning,MAINUSERSDI,ALLUSERS,APP_DATE,APP_UPDATECHK_ROOT,APP_VERSION,APP_VERSION_RELEASE,APP_LINK_LOOKUP,APP_BUILD
    if q=='suggStream':
       S.emit('CAMlist',ALLUSERS)  
       return {'stream': len(MAINUSERSDI)}
    elif q=='ifRecRunning':
       return {'running': str(RecordingRunning)}
    elif q=='about':
-      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE)}
+      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD}
+   elif q=='ip':
+      return {'ip':MainIP}
+   
 @S.on('OpenFolder')
 def openF(fl):
     if sys.platform=='win32':
@@ -287,4 +305,4 @@ def command(data):
 sys.excepthook=onerr     
 if(__name__=="__main__"):
     S.run(main,debug=True,host='0.0.0.0',port='84',ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
-    
+   
