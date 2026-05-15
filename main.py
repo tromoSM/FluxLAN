@@ -4,7 +4,7 @@ import os
 import sys
 from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
 import ctypes
-import base64c
+import base64
 from datetime import datetime
 import subprocess
 import platformdirs
@@ -13,6 +13,7 @@ import signal
 import numpy
 import cv2
 import socket
+import webbrowser
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -30,6 +31,7 @@ ALLUSERS=[]
 RECORDED_DATA=[]
 
 
+DEVELOPER_MODE=True
 LASTFrame='__not-found__'
 orientation='up'
 RecordingRunning=False
@@ -39,7 +41,7 @@ MotionDetecting=False
 MotionFrameSkip=0
 MotionFrameLS=None
 MainIP='__not-found__'
-
+MainPort='84'
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
@@ -151,16 +153,14 @@ def revive(user):
 
 @S.on('INFO')
 def ask(q):
-   global RecordingRunning,MAINUSERSDI,ALLUSERS,APP_DATE,APP_UPDATECHK_ROOT,APP_VERSION,APP_VERSION_RELEASE,APP_LINK_LOOKUP,APP_BUILD
+   global RecordingRunning,MAINUSERSDI,ALLUSERS,APP_DATE,APP_UPDATECHK_ROOT,APP_VERSION,APP_VERSION_RELEASE,APP_LINK_LOOKUP,APP_BUILD,MainIP,MainPort
    if q=='suggStream':
       S.emit('CAMlist',ALLUSERS)  
       return {'stream': len(MAINUSERSDI)}
    elif q=='ifRecRunning':
       return {'running': str(RecordingRunning)}
    elif q=='about':
-      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD}
-   elif q=='ip':
-      return {'ip':MainIP}
+      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD,"ip":MainIP,'port':MainPort}
    
 @S.on('OpenFolder')
 def openF(fl):
@@ -302,7 +302,9 @@ def command(data):
     MotionFrameLS=None
     MotionFrameSkip=0
 
+if not DEVELOPER_MODE:
+ webbrowser.open(f'https://localhost:{MainPort}/dashboard')
+
 sys.excepthook=onerr     
 if(__name__=="__main__"):
-    S.run(main,debug=True,host='0.0.0.0',port='84',ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
-   
+    S.run(main,debug=True,host='0.0.0.0',port=MainPort,ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
