@@ -26,6 +26,8 @@ window.addEventListener('DOMContentLoaded',function(){
         LINKLOOKUP=app.link_lookup
         LOCALIP=app.ip
         port=app.port
+        protocol=app.protocol
+        strength=app.strength
     })
     function cammessage(a){
         let full=document.createElement('f')
@@ -569,6 +571,9 @@ window.addEventListener('DOMContentLoaded',function(){
                     })
                 }
                 else{
+                 S.emit('refresh','NetworkInfo',(refreshed)=>{
+                   strength=refreshed.strength
+                 })
                  let full=document.createElement('f')
                  let infull=document.createElement('flpop')
                  infull.setAttribute('closing','')
@@ -603,7 +608,9 @@ window.addEventListener('DOMContentLoaded',function(){
                  let infota=document.createElement('p')
                  let ininfo=document.createElement('info')
                  ininfo.addEventListener('click',function(s){s.stopPropagation()})
-                 let infotablayout={'Local IP':LOCALIP,"Running on ":`Port ${port}`}
+                 
+                 let infotablayout={'Local IP':LOCALIP,"Running on ":`Port ${port}`,"Protocol":protocol,"Network strength":`${strength.signal}% (${strength.dBm}dBm)`}
+
                  Object.entries(infotablayout).forEach(([name,value])=>{
                     let eachinfo=document.createElement('p')
                     eachinfo.setAttribute('eachinfo','')
