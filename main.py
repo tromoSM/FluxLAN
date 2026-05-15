@@ -30,7 +30,6 @@ MAINUSERSDI={}
 ALLUSERS=[]
 RECORDED_DATA=[]
 
-
 DEVELOPER_MODE=True
 LASTFrame='__not-found__'
 orientation='up'
@@ -40,8 +39,22 @@ LASTrecStamp=None
 MotionDetecting=False
 MotionFrameSkip=0
 MotionFrameLS=None
-MainIP='__not-found__'
+MainIP='unavailable'
 MainPort='84'
+Protocol=NetworkStrength='unavailable'
+
+def refreshNetworkInfo():
+ global NetworkStrength
+ if sys.platform=='win32':
+  #stackoverflow/a/39463881
+  tempbytes=subprocess.check_output(["netsh","wlan","show","network","mode=Bssid"],text=True)
+  for line in tempbytes.split('\n'):
+     if "Signal" in line:
+        signal=int(line.split(':')[1].strip().replace('%',''))
+        dBm=(signal//2)-100
+        NetworkStrength={"signal":signal,"dBm":dBm}
+refreshNetworkInfo()
+
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
@@ -160,7 +173,8 @@ def ask(q):
    elif q=='ifRecRunning':
       return {'running': str(RecordingRunning)}
    elif q=='about':
-      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD,"ip":MainIP,'port':MainPort}
+      refreshNetworkInfo()
+      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD,"ip":MainIP,'port':MainPort,'protocol':Protocol,"strength":NetworkStrength}
    
 @S.on('OpenFolder')
 def openF(fl):
@@ -170,7 +184,10 @@ def openF(fl):
         
 @main.route('/')
 def web():
+ global Protocol
+ Protocol=request.scheme
  return render_template('index.html')
+
 @main.route('/dashboard')
 def admin():
    if(request.remote_addr!='127.0.0.1'):
@@ -301,6 +318,12 @@ def command(data):
     MotionDetecting=False
     MotionFrameLS=None
     MotionFrameSkip=0
+
+@S.on('refresh')
+def refresh(info):
+   if info=='NetworkInfo':
+      refreshNetworkInfo()
+      return {"strength":NetworkStrength}
 
 if not DEVELOPER_MODE:
  webbrowser.open(f'https://localhost:{MainPort}/dashboard')
