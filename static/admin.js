@@ -15,6 +15,8 @@ window.addEventListener('DOMContentLoaded',function(){
     }
     let UPDATECHKROOT=''
     let LINKLOOKUP=''
+    let LOCALIP='127.0.0.1'
+    let port='unavailable'
     S.emit('INFO','about',(app)=>{
         window.FluxLAN_version=app.version
         window.FluxLAN_version_release=app.version_release
@@ -22,6 +24,8 @@ window.addEventListener('DOMContentLoaded',function(){
         window.FluxLAN_build=app.build
         UPDATECHKROOT=app.updatechk_root
         LINKLOOKUP=app.link_lookup
+        LOCALIP=app.ip
+        port=app.port
     })
     function cammessage(a){
         let full=document.createElement('f')
@@ -588,10 +592,36 @@ window.addEventListener('DOMContentLoaded',function(){
                  flexC.append(updatemsg,updateFeatures)
                  flexxr.append(chkupdate,flexC)
                  let seperatorS=document.createElement('seperator')
+                 let seperatorSS=document.createElement('seperator')
                  seperatorS.setAttribute('small','')
                  //info
-                 let flexxraa=document.createElement('flexrr')
-                 flexxraa.append()
+                 let flexxraa=document.createElement('expandable')
+                 flexxraa.setAttribute("info",'')
+                 flexxraa.setAttribute('collapsed','')
+                 let collapsed=document.createElement('p')
+                 collapsed.innerHTML='Info <span class="material-symbols-rounded" style="vertical-align: center;">keyboard_arrow_down</span>'
+                 let infota=document.createElement('p')
+                 let ininfo=document.createElement('info')
+                 ininfo.addEventListener('click',function(s){s.stopPropagation()})
+                 let infotablayout={'Local IP':LOCALIP,"Running on ":`Port ${port}`}
+                 Object.entries(infotablayout).forEach(([name,value])=>{
+                    let eachinfo=document.createElement('p')
+                    eachinfo.setAttribute('eachinfo','')
+                    eachinfo.innerHTML=`${name}<span align='right'>${value}</span>`
+                    ininfo.appendChild(eachinfo)
+                 })
+                 flexxraa.append(collapsed,ininfo)
+                 flexxraa.addEventListener('click',function(){
+                    if(flexxraa.hasAttribute('collapsed')){
+                        flexxraa.style.height=`${flexxraa.scrollHeight}px`
+                        flexxraa.removeAttribute('collapsed')
+                    }
+                    else{
+                        flexxraa.setAttribute('collapsed','')
+                        flexxraa.style.height=`20px`
+                    }
+                 })
+
                  //footer
                  let flexxra=document.createElement('flexrr')
                  let clearall=document.createElement('button')
@@ -631,7 +661,7 @@ window.addEventListener('DOMContentLoaded',function(){
                  copyright.setAttribute('warning','')
                  copyright.innerHTML='© 2026 tromoSM. Licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0">apache 2.0</a>. FluxLAN is open-source • <a href="https://github.com/tromoSM/FluxLAN">contribute here</a>'
                  footer.append(copyright)
-                 inscroll.append(imim,infobar,flexxr,seperatorS,flexxraa,flexxra,social,footer)
+                 inscroll.append(imim,infobar,flexxr,seperatorSS,flexxraa,seperatorS,flexxra,social,footer)
                  full.appendChild(infull)
                  document.body.append(full)
                  await sleep(200)
