@@ -20,4 +20,6 @@ Turn your old phones into a local camera network
  - [x] update-check system
  - [ ] close when low battery
  - [x] Motion detection
+
+#### Currently working on : dashboard/advanced/info-tab
 ###### started on 26.04.23
