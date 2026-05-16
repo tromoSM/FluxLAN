@@ -14,17 +14,21 @@ import numpy
 import cv2
 import socket
 import webbrowser
+import tkinter as tk
+from tkinter import filedialog
+import queue
+import threading
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
 APP_DATE='2026/05'
 APP_UPDATECHK_ROOT='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/repos/FLUXLAN/manifest.json'
 APP_LINK_LOOKUP='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/root/info.json'
-APP_BUILD='stable'
+APP_BUILD='beta'
 
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 
-S=SocketIO(main,cors_allowed_origins="*")
+S=SocketIO(main,cors_allowed_origins="*",async_mode='threading')
 
 MAINUSERSDI={}
 ALLUSERS=[]
@@ -42,6 +46,10 @@ MotionFrameLS=None
 MainIP='unavailable'
 MainPort='84'
 Protocol=NetworkStrength='unavailable'
+
+root = tk.Tk()
+root.withdraw()
+tk_q=queue.Queue()
 
 def refreshNetworkInfo():
  global NetworkStrength
@@ -325,9 +333,70 @@ def refresh(info):
       refreshNetworkInfo()
       return {"strength":NetworkStrength}
 
+@S.on('exportdata')
+def export(jsond):
+   #stackoverflow/a/14119223
+   datetimeX=datetime.now()
+   additionalinfo={
+      "FLUXLAN":{
+         "version":APP_VERSION,
+         "version_release":APP_VERSION_RELEASE,
+         "build":APP_BUILD,
+         "release_date":APP_DATE
+      },
+      "Export_info":{
+         "time_exported":f"{datetimeX.date()} {datetimeX.hour}:{datetimeX.minute}:{datetimeX.second}",
+         "time_format":"YYYY-MM-DD HH:MM:SS"
+      },
+      "SessionData":{"ALLUSERS":ALLUSERS,"IP":MainIP,"Port":MainPort}
+   }
+
+   jsondata=json.loads(jsond)
+   jsondata.update(additionalinfo)
+   def saveExport():
+    root.lift()
+    root.attributes('-topmost',True)
+    accepted=[('FluxLan backup files','*.fluxlan*')]
+    saved=filedialog.asksaveasfile(filetypes=accepted,defaultextension='.fluxlan',title='Save export/backup file',initialfile=f"FluxLAN backup {datetimeX.date()}")
+    root.update()
+    root.withdraw()
+    if saved:
+       json.dump(jsondata,saved)
+       saved.close()
+   tk_q.put(saveExport)
+
 if not DEVELOPER_MODE:
  webbrowser.open(f'https://localhost:{MainPort}/dashboard')
 
-sys.excepthook=onerr     
+@S.on('importdata')
+def importpref():
+ def openImport():
+  root.lift()
+  root.attributes('-topmost',True)
+  accepted=[('FluxLan backup files','*.fluxlan*')]
+  imported=filedialog.askopenfilename(filetypes=accepted,title='Import export/backup file',defaultextension='.fluxlan')
+  root.update()
+  root.withdraw()
+  if imported:
+     with open(imported,'r') as backup:
+        backupd=json.load(backup)
+        S.emit('recieveImport',backupd)
+
+ tk_q.put(openImport) 
+
+sys.excepthook=onerr   
+
+def tk_qu():
+       while not tk_q.empty():
+          mainfunc=tk_q.get()
+          mainfunc()
+       root.after(10,tk_qu)
+
 if(__name__=="__main__"):
-    S.run(main,debug=True,host='0.0.0.0',port=MainPort,ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'))
+    MainServeThread=threading.Thread(
+       target=lambda:S.run(main,debug=True,host='0.0.0.0',port=MainPort,ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'),use_reloader=False),
+       daemon=True,)
+    MainServeThread.start()
+    root.after(10,tk_qu)
+    root.mainloop()
+    
