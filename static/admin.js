@@ -562,7 +562,7 @@ window.addEventListener('DOMContentLoaded',function(){
                     localStorage.setItem('motion-detecting','no')
                 }
             }
-            else if(act='advanced'){
+            else if(act=='advanced'){
                 if(document.querySelector('flpop')){
                     document.querySelectorAll('flpop').forEach(async pop=>{
                         pop.setAttribute('closing','')
@@ -604,7 +604,7 @@ window.addEventListener('DOMContentLoaded',function(){
                  flexxraa.setAttribute("info",'')
                  flexxraa.setAttribute('collapsed','')
                  let collapsed=document.createElement('p')
-                 collapsed.innerHTML='Info <span class="material-symbols-rounded" style="vertical-align: center;">keyboard_arrow_down</span>'
+                 collapsed.innerHTML='Show info <span class="material-symbols-rounded" style="vertical-align: center;">keyboard_arrow_down</span>'
                  let infota=document.createElement('p')
                  let ininfo=document.createElement('info')
                  ininfo.addEventListener('click',function(s){s.stopPropagation()})
@@ -624,10 +624,12 @@ window.addEventListener('DOMContentLoaded',function(){
                     if(flexxraa.hasAttribute('collapsed')){
                         flexxraa.style.height=`${flexxraa.scrollHeight}px`
                         flexxraa.removeAttribute('collapsed')
+                        collapsed.innerHTML='Hide info <span class="material-symbols-rounded" style="vertical-align: center;">keyboard_arrow_up</span>'
                     }
                     else{
                         flexxraa.setAttribute('collapsed','')
                         flexxraa.style.height=`20px`
+                        collapsed.innerHTML='Show info <span class="material-symbols-rounded" style="vertical-align: center;">keyboard_arrow_down</span>'
                     }
                  })
 
@@ -635,11 +637,19 @@ window.addEventListener('DOMContentLoaded',function(){
                  let flexxra=document.createElement('flexrr')
                  let clearall=document.createElement('button')
                  let shutall=document.createElement('button')
+                 let importpref=document.createElement('button')
+                 let exportpref=document.createElement('button')
+                 importpref.innerText='Import'
+                 importpref.setAttribute('import','')
+                 exportpref.innerText='Export'
                  shutall.innerText='Close FluxLAN'
+                 importpref.setAttribute('tooltip','import saved data from a .fluxlan backup file')
+                 exportpref.setAttribute('tooltip','export data to a .fluxlan backup file')
                  shutall.setAttribute('uSureBoutit','')
                  clearall.setAttribute('warn','')
                  clearall.innerText='clear localStorage'
-                 flexxra.append(clearall,shutall)
+                 clearall.setAttribute('tooltip','clear localStorage of this device and all connected devices.')
+                 flexxra.append(clearall,shutall,importpref,exportpref)
                  // add openlog button
                  flexxra.setAttribute('cache','')
                  let social=document.createElement('flexrr')
@@ -675,8 +685,8 @@ window.addEventListener('DOMContentLoaded',function(){
                  document.body.append(full)
                  await sleep(200)
                  infull.removeAttribute('closing','')
-                 refreshLinks()
                  refreshTooltip()
+                 refreshLinks()
                 chkupdate.addEventListener('click',async function(){
                  fetch(UPDATECHKROOT).then(n=>
                   n.json()).then(async app=>{
@@ -723,19 +733,27 @@ window.addEventListener('DOMContentLoaded',function(){
                         p.setAttribute('warning','')
                         flexC.appendChild(p)
                     }
-
                   })
                 })
                 clearall.addEventListener('click',function(){
                     clearall.setAttribute('disabled','')
                     clearall.setAttribute('busy','')
                     S.emit('ClearAll','')
-                    S.on('AdminCleared',function(){
+                    localStorage.clear()
+                    if(allcams.length!=0){
+                     S.on('AdminCleared',function(){
                         if(clearall.hasAttribute('disabled')){
                             clearall.removeAttribute('disabled')
                         }
-                    })
-
+                     })
+                    }
+                    else{
+                        alert('No device is connected to FluxLAN. Only your localStorage will be cleared.')
+                        if(clearall.hasAttribute('disabled')){
+                            clearall.removeAttribute('disabled')
+                        }
+                    }
+                    window.location.reload()
                 })
                 
                 shutall.addEventListener('click',function(){
@@ -751,6 +769,15 @@ window.addEventListener('DOMContentLoaded',function(){
                         shutall.removeAttribute('busy')
                         shutall.innerText='FluxLAN is closed'
                     })
+                })
+                importpref.addEventListener('click',async function(){
+                    S.emit('importdata')
+                    importpref.setAttribute('disabled','')
+                    await sleep(500)
+                    importpref.setAttribute('busy','')
+                })
+                exportpref.addEventListener('click',function(){
+                    S.emit('exportdata',JSON.stringify(localStorage))
                 })
                 }
 
@@ -839,4 +866,22 @@ window.addEventListener('DOMContentLoaded',function(){
             else{im.setAttribute('grid','')}
         })
     })
+    S.on('recieveImport',async function(json){
+     //stackoverflow/a/34816783
+     let ADDITIONAL_INFO=['FLUXLAN',"Export_info","SessionData"]
+     await Object.keys(json).forEach(function(key){
+        if(!ADDITIONAL_INFO.includes(key)){
+            localStorage.setItem(key,json[key])
+        }
+     })
+     let importb=document.querySelector('[import]')
+     if(importb){
+        if(importb.hasAttribute('busy')){
+        await sleep(500)
+        importb.removeAttribute('busy')
+        }
+        importb.innerText='Success'
+   }
+    })
+
 })
