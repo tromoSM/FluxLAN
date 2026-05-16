@@ -21,5 +21,5 @@ Turn your old phones into a local camera network
  - [ ] close when low battery
  - [x] Motion detection
 
-#### Currently working on : dashboard/advanced/info-tab
+#### Currently working on : dashboard/advanced/export and import preferences(backup file)
 ###### started on 26.04.23
