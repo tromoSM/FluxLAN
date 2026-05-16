@@ -609,7 +609,9 @@ window.addEventListener('DOMContentLoaded',function(){
                  let ininfo=document.createElement('info')
                  ininfo.addEventListener('click',function(s){s.stopPropagation()})
                  
-                 let infotablayout={'Local IP':LOCALIP,"Running on ":`Port ${port}`,"Protocol":protocol,"Network strength":`${strength.signal}% (${strength.dBm}dBm)`}
+                 let infotablayout={'Local IP':LOCALIP,"Running on ":`Port ${port}`,"Protocol":protocol,"Network strength":`${strength.signal}% (${strength.dBm}dBm)`,
+                "Connected cameras": allcams.length
+                }
 
                  Object.entries(infotablayout).forEach(([name,value])=>{
                     let eachinfo=document.createElement('p')
