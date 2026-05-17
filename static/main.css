@@ -201,7 +201,7 @@ notification img{
 [align='right']{position: absolute;right: 0;color: #848488;}
 [eachinfo]{width: 100%;position: relative;cursor: text;}
 info{cursor: default; display: flex;height: fit-content;background-color: #ffffff;width: 100%;flex-direction: column; position: relative;margin-top: 10px;padding: 10px;box-sizing: border-box;border-radius: 15px;}
-expandable[info]{height: auto;transition: 0.2s;display: block;overflow: clip;background: rgb(208, 208, 208);padding: 6px;border-radius: 11px;cursor: pointer;}
+expandable[info]{height: auto;transition: 0.2s;display: block;overflow: clip;background: rgba(151, 151, 151, 0.27);padding: 6px;border-radius: 11px;cursor: pointer;}
 expandable p{padding: 0;margin: 0;}
 expandable[info][collapsed]{height: 20px;}
 [action]{transition: 0.1s}
