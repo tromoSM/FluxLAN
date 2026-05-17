@@ -51,6 +51,32 @@ root = tk.Tk()
 root.withdraw()
 tk_q=queue.Queue()
 
+def FluxLog(log):
+   print('|'+' '+log)
+
+#STARTUP INFO
+terminalsize=os.get_terminal_size()
+if(terminalsize.columns>=(107+len(APP_VERSION))):
+ print(f"""
+ &&&&&&&&&& &&&        &&&    &&&&  &&&&  &&&&  &&&&&&                 &&&&&&&&&        &&&&&&&&    &&&&& 
+ &&&        &&&        &&&    &&&&   &&&&&&&&   &&&&&&                &&&&&&&&&&&      &&&&&&&&&&   &&&&& 
+ &&&&&&&&&& &&&        &&&    &&&&     &&&&     &&&&&&               &&&&&  &&&&&&     &&&&&&&&&&&  &&&&& 
+ &&&&&&&&&& &&&        &&&    &&&&    &&&&&&    &&&&&&              &&&&&    &&&&&&    &&&&&& &&&&& &&&&& 
+ &&&        &&&        &&&    &&&&   &&& &&&&   &&&&&&             &&&&&&&&&&&&&&&&&   &&&&&&  &&&&&&&&&& 
+ &&&        &&&&&&&&&& &&&&&&&&&&  &&&&   &&&&   &&&&&&&&&&&&&&&  &&&&&         &&&&&  &&&&&&   &&&&&&&&& {APP_VERSION}
+ """)
+else:
+   print(f"""
+ d88888b db      db    db db    db db       .d8b.  d8b   db 
+ 88'     88      88    88 `8b  d8' 88      d8' `8b 888o  88 
+ 88ooo   88      88    88  `8bd8'  88      88ooo88 88V8o 88 
+ 88~~~   88      88    88  .dPYb.  88      88~~~88 88 V8o88 
+ 88      88booo. 88b  d88 .8P  Y8. 88booo. 88   88 88  V888 
+ YP      Y88888P ~Y8888P' YP    YP Y88888P YP   YP VP   V8P {APP_VERSION}
+""")
+if DEVELOPER_MODE:
+   FluxLog('Running in developer mode') # add level=highest to ts
+
 def refreshNetworkInfo():
  global NetworkStrength
  if sys.platform=='win32':
