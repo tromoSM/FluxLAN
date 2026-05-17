@@ -22,5 +22,5 @@ Turn your old phones into a local camera network
  - [x] Motion detection
  - [x] Export and Import preference system
 
-#### Currently working on : Improve:dashboard/advanced/export and import preferences(backup file)
+#### Currently working on : Logging and startup
 ###### started on 26.04.23
