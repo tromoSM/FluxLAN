@@ -18,6 +18,9 @@ import tkinter as tk
 from tkinter import filedialog
 import queue
 import threading
+from rich.logging import RichHandler
+import logging
+from rich.padding import Padding
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -51,8 +54,24 @@ root = tk.Tk()
 root.withdraw()
 tk_q=queue.Queue()
 
-def FluxLog(log):
-   print('|'+' '+log)
+#Logging
+if DEVELOPER_MODE: #toggle this in production
+ FlaskLog=logging.getLogger('werkzeug')
+ FlaskLog.level=logging.ERROR
+
+FluxLanLog=logging.getLogger(__name__)
+logging.basicConfig(handlers=[RichHandler(rich_tracebacks=True,show_level=False,show_path=False,show_time=False,markup=True)],format='%(message)s',level=logging.INFO)
+
+def FluxLog(message,level='info',padding=1,CoverText=False):
+   colortable={'info':'bright_blue','error':'red',"high":'bright_red','debug':'magenta','warning':'yellow'}
+   if not CoverText:
+    message=f"[{colortable.get(level)}]|[/{colortable.get(level)}] {message}"
+   else:
+    message=f"[{colortable.get(level)}]| {message}[/{colortable.get(level)}]"
+   Loglevel={"info":FluxLanLog.info,"error":FluxLanLog.error,'high':FluxLanLog.info,'debug':FluxLanLog.debug,'warning':FluxLanLog.warning}
+   
+   LogFunc=Loglevel.get(level)
+   LogFunc(f'{" "*padding}{message}') 
 
 #STARTUP INFO
 terminalsize=os.get_terminal_size()
@@ -74,8 +93,10 @@ else:
  88      88booo. 88b  d88 .8P  Y8. 88booo. 88   88 88  V888 
  YP      Y88888P ~Y8888P' YP    YP Y88888P YP   YP VP   V8P {APP_VERSION}
 """)
+
+
 if DEVELOPER_MODE:
-   FluxLog('Running in developer mode') # add level=highest to ts
+   FluxLog('Running in developer mode',level='high')
 
 def refreshNetworkInfo():
  global NetworkStrength
