@@ -17,6 +17,8 @@ window.addEventListener('DOMContentLoaded',function(){
     let LINKLOOKUP=''
     let LOCALIP='127.0.0.1'
     let port='unavailable'
+    let protocol='unavailable'
+    let strength='unavailable'
     S.emit('INFO','about',(app)=>{
         window.FluxLAN_version=app.version
         window.FluxLAN_version_release=app.version_release
@@ -665,13 +667,26 @@ window.addEventListener('DOMContentLoaded',function(){
                  otherprojx.setAttribute("target",'_blank')
                  let feedback=document.createElement('p')
                  feedback.innerText='feedback or request features'
-                 fetch(LINKLOOKUP).then(n=>
+                 if(navigator.onLine){
+                  //stackoverflow.com/a/79207042 @Yassir Hartani
+                  fetch(LINKLOOKUP).then(n=>
                      n.json()).then(nf=>{
                        otherprojx.setAttribute('indicatorText',`${nf.pages.root.split('//')[1]}projects`)
                        otherprojx.setAttribute('openlink',`${nf.pages.root}?utm_source=fluxlan_inapp_projects_advanced#project`)
                        feedback.setAttribute('openlink',`${nf.pages.feedback}&utm_source=fluxlan_inapp_feedback_advanced`)
                        feedback.setAttribute('indicatorText',`${nf.pages.root.split('//')[1]}feedback-or-request-features`)
-                 })
+                  })
+                  }
+                else{
+                    console.error('user offline')
+                    otherprojx.setAttribute('indicatorText',`tromosm.github.io/projects`)
+                    otherprojx.setAttribute('openlink',`https://tromosm.github.io/tromoSM/t/?utm_source=fluxlan_inapp_projects_advanced#project`)
+                    feedback.setAttribute('openlink',`https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=fluxlan_inapp_feedback_advanced`)
+                    feedback.setAttribute('indicatorText',`tromosm.github.io/feedback-or-request-features`)
+                    if(!navigator.onLine){
+                    console.error('user offline')
+                    }
+                  }
 
                  social.append(github,otherprojx,feedback)
 
