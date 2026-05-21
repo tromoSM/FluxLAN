@@ -20,9 +20,11 @@ import queue
 import threading
 from rich.logging import RichHandler
 import logging
-from rich.padding import Padding
 from rich.highlighter import NullHighlighter
 import requests
+import qrcode
+from io import BytesIO
+import cryptography
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -54,6 +56,7 @@ MotionFrameLS=None
 MainIP='unavailable'
 MainPort='84'
 Protocol=NetworkStrength='unavailable'
+CloseWhenBattery=60
 
 root = tk.Tk()
 root.withdraw()
@@ -153,11 +156,21 @@ SOCKET=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 try:
    SOCKET.connect(('8.8.8.8',80))
    MainIP=SOCKET.getsockname()[0]
-except Exception:
+except Exception as err:
    MainIP='127.0.0.1'
+   FluxLog(err,level='error',CoverText=True)
 finally:
    FluxLog(f'Refreshing Local IP address {MainIP}')
    SOCKET.close()
+
+mainqr=qrcode.QRCode(version=1,box_size=10,border=1)
+mainqr.add_data(f"https://{MainIP}:{MainPort}")
+mainqr.make(fit=True)
+img=mainqr.make_image(fill_color='black',back_color='white')
+buffer=BytesIO()
+img.save(buffer,format='JPEG')
+MainQR=base64.b64encode(buffer.getvalue()).decode()
+
 # GLOBAL UI FUNCc
 
 def joinev(user):
@@ -255,7 +268,8 @@ def ask(q):
    elif q=='about':
       refreshNetworkInfo()
       return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD,"ip":MainIP,'port':MainPort,'protocol':Protocol,"strength":NetworkStrength}
-
+   elif q=='qr':
+      return {"qr": MainQR,"link":f"https://{MainIP}:{MainPort}"}
 @S.on('OpenFolder')
 def openF(fl):
     if sys.platform=='win32':
@@ -361,6 +375,8 @@ def pref(com):
 def battery(data):
    S.emit('adminBatteryChange',data) 
    FluxLog(f"{data.get('user')} reported a battery change with the status : {data.get('status')}",KeyValues=True)
+   if CloseWhenBattery:
+      S.emit('CloseWhen',CloseWhenBattery)
 
 @S.on('ClearAll')
 def clear(e):
@@ -497,11 +513,15 @@ def tk_qu():
           mainfunc()
        root.after(10,tk_qu)
 
+@S.on('ChangeBatteryStatus')
+def change(status):
+   global CloseWhenBattery
+   CloseWhenBattery=status
+
 if(__name__=="__main__"):
     MainServeThread=threading.Thread(
-       target=lambda:S.run(main,debug=True,host='0.0.0.0',port=MainPort,ssl_context=('192.168.1.XX.pem', '192.168.1.XX-key.pem'),use_reloader=False),
+       target=lambda:S.run(main,debug=True,host='0.0.0.0',port=MainPort,ssl_context='adhoc',use_reloader=False),
        daemon=True,)
     MainServeThread.start()
     root.after(10,tk_qu)
     root.mainloop()
-    
