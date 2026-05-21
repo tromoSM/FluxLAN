@@ -146,7 +146,7 @@ window.addEventListener('DOMContentLoaded',function(){
         
     }
     //layout
-    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios',"motion detector|motion_sensor_active",'advanced|info']
+    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios',"motion detector|motion_sensor_active",'advanced|info','link camera|qr_code_2']
     let flx=document.createElement('flexR')
     mainlayoutbt.forEach(bt=>{
         if(bt.trim()!='#'){
@@ -563,6 +563,50 @@ window.addEventListener('DOMContentLoaded',function(){
                     S.emit('MotionDetection',{command:'stop'})
                     localStorage.setItem('motion-detecting','no')
                 }
+            }
+            else if(act=='link-camera'){
+                if(document.querySelector('flpop')){
+                    document.querySelectorAll('flpop').forEach(async pop=>{
+                        pop.setAttribute('closing','')
+                        await sleep(200)
+                        pop.closest('f').remove()
+                    })
+                }
+                else{
+                 S.emit('INFO','qr',async (qr)=>{
+                   let full=document.createElement('f')
+                   let infull=document.createElement('flpop')
+                   infull.setAttribute('closing','')
+                   im=document.createElement('img')
+                   infull.setAttribute('flexR','')
+                   im.src=`data:image/png;base64,${qr.qr}`
+                   im.setAttribute('qr','')
+                   im.setAttribute('openlink',qr.link)
+                   im.setAttribute('indicatortext',qr.link)
+                   im.setAttribute('target','_blank')
+                   im.setAttribute('tooltip','open in new tab')
+                   let flexc=document.createElement('flexC')
+                   let title=document.createElement('h2')
+                   title.innerText='Scan QR to link device'
+                   let desc=document.createElement('p')
+                   let sidetitle=document.createElement('p')
+                   sidetitle.setAttribute('warning','large')
+                   desc.setAttribute('warning','')
+                   sidetitle.innerText='Showing a warning screen?'
+                   let descc=document.createElement('p')
+                   descc.setAttribute('warning','')
+                   descc.innerText=`Click advanced ❯ Continue to ${qr.link}(unsafe).\n This screen may appear because the cert is self-signed.`
+                   desc.innerText='All the devices must be connected to the same network.'
+                   flexc.append(title,desc,sidetitle,descc)
+                   infull.append(im,flexc)
+                   full.append(infull)
+                   document.body.append(full)
+                   refreshLinks()
+                   refreshTooltip()
+                   await sleep(200)
+                   infull.removeAttribute('closing','')
+                })
+             } 
             }
             else if(act=='advanced'){
                 if(document.querySelector('flpop')){
