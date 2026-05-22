@@ -21,7 +21,7 @@ Turn your old phones into a local camera network
  - [ ] close when low battery
  - [x] Motion detection
  - [x] Export and Import preference system
- - [ ] Link devices with QR
+ - [x] Link devices with QR
 
 #### Currently working on : Logging and startup
 ###### started on 26.04.23
