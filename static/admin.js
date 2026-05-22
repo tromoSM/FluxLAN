@@ -7,8 +7,8 @@ window.addEventListener('DOMContentLoaded',function(){
     S.on('CAMlist',function(all){
         allcams=all
     })
-    window.openS=function(path,folder){
-        S.emit('OpenSelected',{"file":path,"folder":folder})
+    window.openS=function(path,folder,filet){
+        S.emit('OpenSelected',{"file":path,"folder":folder,'filetype':filet})
     }
     window.openDir=function(path){
         S.emit('OpenDir',path)
@@ -131,7 +131,7 @@ window.addEventListener('DOMContentLoaded',function(){
                     }
                     cavget.drawImage(str,0,0,maincanv.width,maincanv.height)
                     S.emit('SaveImage',maincanv.toDataURL('image/jpeg'),path=>{
-                        notification({title:"Image saved",body:`Image saved to <span onclick="openDir('${path.dir}')" >${path.dir}/</span><span button='open' onclick="openS('${path.file}','Captures')">Open</span>`,timeout:3})
+                        notification({title:"Image saved",body:`Image saved to <span onclick="openDir('${path.dir}')" >${path.dir}/</span><span button='open' onclick="openS('${path.file}','Captures','jpg')">Open</span>`,timeout:3})
                     })
                     maincanv.toDataURL('image/jpeg')
                     })
