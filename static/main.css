@@ -246,3 +246,4 @@ button[busy]::before{filter: blur(10px); width: 100%;height: 100%;content: '';po
 [qr]:active{transform: scale(0.95);}
 [flexR]{flex-direction: row;gap:10px;}
 [warning=large]{font-size: 13px;font-weight: 700;margin: 6px 0px 1px 0px;}
+[button=open]{background: #07070742;font-weight: 600; padding: 2px 6px; border-radius: 50px; mix-blend-mode: screen; color: beige;position: absolute; right: 5px; top: 12px;cursor: pointer;}
