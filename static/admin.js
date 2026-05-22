@@ -146,7 +146,7 @@ window.addEventListener('DOMContentLoaded',function(){
         
     }
     //layout
-    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios',"motion detector|motion_sensor_active",'advanced|info','link camera|qr_code_2']
+    let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios',"motion detector|motion_sensor_active",'link camera|qr_code_2','advanced|info']
     let flx=document.createElement('flexR')
     mainlayoutbt.forEach(bt=>{
         if(bt.trim()!='#'){
@@ -231,6 +231,7 @@ window.addEventListener('DOMContentLoaded',function(){
                 let dash=document.querySelector('dashboard')
                if(dash.getAttribute('visible')=='yuh'){
                 ac.querySelector('span').innerText='keyboard_arrow_down'
+                ac.setAttribute('tooltip','show ribbon')
                 dash.setAttribute(`visible`,'no')
                 ac.setAttribute('float','float')
                 if(document.querySelector('popup')){
@@ -242,6 +243,7 @@ window.addEventListener('DOMContentLoaded',function(){
                else{
                 ac.querySelector('span').innerText='keyboard_arrow_up'
                 dash.setAttribute(`visible`,'yuh')
+                ac.setAttribute('tooltip','hide ribbon')
                 ac.setAttribute('float','no')
                }
             }
