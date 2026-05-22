@@ -881,23 +881,24 @@ window.addEventListener('DOMContentLoaded',function(){
         cammessage('show')
     })
     function refreshTooltip(){
-        
     document.querySelectorAll('[tooltip]').forEach(yo=>{
-        yo.addEventListener('mouseenter',function(){
+        if(!yo.hasAttribute('tooltipset')){
+            yo.setAttribute('tooltipset','')
+         yo.addEventListener('mouseenter',function(){
             let pos=yo.getBoundingClientRect()
             let title=document.createElement('tooltip')
             title.innerText=yo.getAttribute('tooltip')
             title.style.left=pos.left+'px'
             title.style.top=pos.top+pos.height+'px'
             document.body.appendChild(title)
-        })
-        yo.addEventListener('mouseleave',async function(){
-        document.querySelectorAll('tooltip').forEach(async y=>{
+         })
+         yo.addEventListener('mouseleave',async function(){
+         document.querySelectorAll('tooltip').forEach(async y=>{
             y.setAttribute('closing','')
             await sleep(200)
             y.remove()
         })
-    })
+    })}
     })
     }
     refreshTooltip()
