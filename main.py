@@ -347,14 +347,41 @@ def record(data):
            RecordingRunning=False
            FluxLog('Stopping recording')
            AdminNotification(title='Processing recorded video',body='Recorded video is currently processing.',timeout=3)
-           tempbinaryrecs=bytearray()
-           for frame in RECORDED_DATA:
-              eachfr=base64.b64decode(frame)
-              tempbinaryrecs.extend(eachfr)
-           
-           with open(f'{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}',"wb") as vid:
-             vid.write(tempbinaryrecs)             
-           
+           firstfr=None
+           for eachfr in RECORDED_DATA:
+            try:
+             bytess=base64.b64decode(eachfr)
+             npar=numpy.frombuffer(bytess,numpy.uint8)
+             eachbyte=cv2.imdecode(npar,cv2.IMREAD_COLOR)
+             if eachbyte is not None:
+               firstfr=eachbyte
+               break
+            except:
+               pass
+           if firstfr is None:
+              FluxLog('No frames found',level='error')
+           recheight,recwidth=firstfr.shape[:2]
+           saved=os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")
+           mainencd=cv2.VideoWriter_fourcc(*'mp4v')
+           mainvid=cv2.VideoWriter(saved,mainencd,30,(recwidth,recheight))
+           mainvid.write(firstfr)
+           mainlogo=cv2.imread(os.path.abspath('static/Assets/logo-w.png'),cv2.IMREAD_UNCHANGED)
+           h,w=mainlogo.shape[:2]
+           logo=cv2.resize(mainlogo,(120,int(h*(120/w))),interpolation=cv2.INTER_AREA)
+           for eachfrr in RECORDED_DATA[1:]:
+             try:
+              bytess=base64.b64decode(eachfrr)
+              npar=numpy.frombuffer(bytess,numpy.uint8)
+              eachbyte=cv2.imdecode(npar,cv2.IMREAD_COLOR)
+              if eachbyte is not None:
+                 blend=cv2.addWeighted(eachbyte[20:20+logo.shape[0],20:20+logo.shape[1]],0.8,logo[:,:,:3],0.2,0)
+                 eachbyte[20:20+logo.shape[0],20:20+logo.shape[1]][logo[:,:,3]>0]=blend[logo[:,:,3]>0]
+                 mainvid.write(eachbyte)
+             except Exception as err:
+                FluxLog(err,level='warning')
+                pass
+           mainvid.release()
+
            AdminNotification(title='Video saved',body=f'Video saved to <span onclick="openDir(`{'Captures'}`)">Captures/</span><span button="open" onclick="{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}">open</span>',timeout='never')
 
 @S.on('hostpref') #dont use (to v1+)
