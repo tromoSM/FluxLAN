@@ -24,7 +24,7 @@ from rich.highlighter import NullHighlighter
 import requests
 import qrcode
 from io import BytesIO
-import cryptography
+import cryptography #keep ts
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -314,14 +314,16 @@ def save(data):
 def openS(data):
  path=data.get('file')
  folder=data.get('folder')
+ fileExt=data.get('filetype')
  if sys.platform=='win32':
    try:
-    subprocess.Popen(f'explorer /select,{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.jpg"))}') 
+    subprocess.Popen(f'explorer /select,{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))}') 
    except Exception as err:
     FluxLog(f'Couldnt execute function : {err}',level='error',KeyValues=True)
  else: 
-   os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.jpg"))
+   os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))
    FluxLog(f'Some of the features might not work. FluxLan doesnt fully support {sys.platform} yet. Report issue : {APP_SUPPORT}',level='warning',KeyValues=True)        
+ FluxLog(f'Opening {os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))}')
 
 @S.on('OpenDir')
 def openD(path):
@@ -381,8 +383,7 @@ def record(data):
                 FluxLog(err,level='warning')
                 pass
            mainvid.release()
-
-           AdminNotification(title='Video saved',body=f'Video saved to <span onclick="openDir(`{'Captures'}`)">Captures/</span><span button="open" onclick="{os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")}">open</span>',timeout='never')
+           AdminNotification(title=f'Recording saved',body=f"""Recording saved to <span onclick="openDir('Captures')">Captures/</span><span button="open" onclick="openS('Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}','Captures','mp4')">open</span>""",timeout='5')
 
 @S.on('hostpref') #dont use (to v1+)
 def pref(com):
@@ -446,7 +447,7 @@ def MotionDetect():
                   with open(f'{os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected",f"Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}.jpg")}',"wb") as im:
                    im.write(base64.b64decode(base))        
                    FluxLog(f'Motion detected in {LASTFrame.get('camname')} at {datetimeX.time()}',CoverText=True)
-                   AdminNotification(title=f'Motion detected in {LASTFrame.get('camname')}',body=f"""Motion detected in {LASTFrame.get('camname')}. Image captured <span onclick="openDir('Motion detected')">Captures/</span><span button="open" onclick="openS('Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}','Motion detected')">open</span>""",timeout='5')
+                   AdminNotification(title=f'Motion detected in {LASTFrame.get('camname')}',body=f"""Motion detected in {LASTFrame.get('camname')}. Image captured <span onclick="openDir('Motion detected')">Captures/</span><span button="open" onclick="openS('Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}','Motion detected','jpg')">open</span>""",timeout='5')
             MotionFrameLS=eachfr
 
 @S.on('MotionDetection')
