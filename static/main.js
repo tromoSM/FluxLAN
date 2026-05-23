@@ -1,4 +1,43 @@
 window.addEventListener('DOMContentLoaded',async function(){
+let stealthMode=false
+let st=document.querySelector('[stealth="b"]')
+let mainpage=document.documentElement
+st.addEventListener('click',function(){
+    if(mainpage.requestFullscreen){mainpage.requestFullscreen()}
+    else if(mainpage.webkitRequestFullscreen){mainpage.webkitRequestFullscreen()}
+    else if(mainpage.webkitEnterFullscreen){mainpage.webkitEnterFullscreen()}
+    else{alert(`failed to enable fullscreen mode. your browser doesnt support this feature.\nif you're using safari click "AA" and hide toolbar.`)}
+    document.querySelector('video').style.opacity='0'
+    alert('Double click anywhere to change the background color')
+    let covr=document.createElement('cover')
+    covr.style.position='fixed'
+    covr.style.width="100%"
+    covr.style.height="100%"
+    covr.style.background='#fff'
+    covr.style.display='block'
+    covr.style.zIndex='999999'
+    covr.style.top='0'
+    covr.style.left='0'
+    document.body.append(covr)
+    stealthMode=true
+    if(stealthMode){
+        let col='white'
+        window.addEventListener('dblclick',function(){
+        if(col=='white'){document.querySelector('cover').style.background='black';col='black'}else{document.querySelector('cover').style.background='white';col='white'}
+        document.body.style.background=col
+        })
+        let lastt=0
+        window.addEventListener('touchend',function(){
+            let savestate=Date.now()
+            if(savestate-lastt<300){
+            if(col=='white'){document.querySelector('cover').style.background='black';col='black'}else{document.querySelector('cover').style.background='white';col='white'}
+            }
+            lastt=savestate
+            setTimeout(()=>{co.style.opacity='0'},900)
+        })
+}
+})
+
 let mainSt={rec:'__not-found__',ori:0,stream:1,camname:'__not-found__'}
 let afacingMode
 if(!localStorage.getItem('fps')){
@@ -51,6 +90,7 @@ S.on('JSPrefREC',function(pref){
     afacingMode='user'
     localStorage.setItem('facingMode','user')
     window.location.reload()
+    // add ev listener to refresh as applycons to mainrt on chng
   }
   else{
     afacingMode='environment'
@@ -71,6 +111,7 @@ S.on('JSPrefREC',function(pref){
     window.location.reload()
  }
 })
+if(document.querySelector(`[chnO="o"]`)){
 document.querySelector(`[chnO="o"]`).addEventListener('click',function(){
 if(orin==270){
    orin=0 
@@ -79,6 +120,7 @@ else{
     orin+=90
 }
 })
+}
 async function checkBattery(){
     if('getBattery'in navigator){
         let bat=await navigator.getBattery()
@@ -88,7 +130,15 @@ async function checkBattery(){
         return '__not-supported__'
     } 
 }
-S.emit("BatteryChange",{"user": username,"status": await checkBattery()})        
+S.emit("BatteryChange",{"user": username,"status": await checkBattery()}) 
+S.on('CloseWhen',async function(prec){
+    let current=await checkBattery
+    if(current!='__not-supported__'){
+        if(prec>=current){
+            window.close()
+        }
+    }
+})       
 localStorage.setItem('battery',await checkBattery())
 if(localStorage.getItem('battery')!='__not-supported__'){
     setInterval(async ()=>{
@@ -115,7 +165,6 @@ else{
      setInterval(()=>{
      CanV.drawImage(mainVD,0,0,mainC.width,mainC.height)
      let imim=mainC.toDataURL('image/jpeg',0.6)
-     console.log(imim)
      mainSt={rec:imim,ori:orin,stream:stream,camname:username}
      S.emit('Process',mainSt)
      },fps)
