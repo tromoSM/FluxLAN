@@ -145,6 +145,9 @@ window.addEventListener('DOMContentLoaded',function(){
         let full=document.createElement('full')
         
     }
+    if(!localStorage.getItem('recording')){
+                    localStorage.setItem('recording','yes')
+    }
     //layout
     let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios',"motion detector|motion_sensor_active",'link camera|qr_code_2','advanced|info']
     let flx=document.createElement('flexR')
@@ -174,6 +177,12 @@ window.addEventListener('DOMContentLoaded',function(){
         }
     })
     document.querySelector('dashboard').appendChild(flx)
+    if(localStorage.getItem('recording')=='yes'){
+        // dont remove update before click
+        if(document.querySelector('[action="start-recording"').querySelector('span')){
+            document.querySelector('[action="start-recording"').querySelector('span').innerText='stop'
+        }
+    }
 
     S.on('Stream',function(stream){
         cammessage('hide')
@@ -527,25 +536,112 @@ window.addEventListener('DOMContentLoaded',function(){
             }
             }
             else if(act=='start-recording'){
+                
+                
+                if(document.querySelector(`popup[${act}]`)){
+                    (async()=>{
+                        await document.querySelector(`popup[${act}]`).setAttribute('closing','')
+                        await sleep(300)
+                        await document.querySelector(`popup[${act}]`).remove()
+                    })()
+                }
+                else{
+                if(document.querySelector(`popup:not([${act}])`)){
+                    document.querySelectorAll(`popup:not([${act}])`).forEach(rm=>{
+                    (async()=>{
+                        await rm.setAttribute('closing','')
+                        await sleep(300)
+                        await rm.remove()
+                    })()
+                    })
+                }
+                let pop=document.createElement('popup')
+                pop.style.left=pos.left+'px'
+                pop.style.top=pos.top+41+'px'
+                pop.setAttribute(act,'')
+                let name=document.createElement('p')
+                name.innerText=act.replaceAll('-',' ')
+                name.setAttribute('io','')
+                pop.appendChild(name)
+                let start=document.createElement('button')
+                start.setAttribute('start','')
+                let ico=document.createElement('span')
+                ico.className='material-symbols-rounded'
+
+                function updateStatus(){
+                if(localStorage.getItem('recording')=='yes'){
+                 start.innerText='Stop recording '
+                 ico.innerText='stop'
+                 ac.querySelector('span').innerText='stop'
+                 ac.setAttribute('tooltip','stop recording')
+                }
+                else{
+                 start.innerText='Start recording'
+                 ico.innerText='play_arrow'
+                 ac.querySelector('span').innerText='play_arrow'
+                 ac.setAttribute('tooltip','start recording')
+                }
+                start.append(ico)
+                }
+                updateStatus()
+                if(allcams.length!=0){
+                 allcams.forEach(cam=>{
+                    let button=document.createElement('button')
+                    button.innerText=cam
+                    button.setAttribute('camindex',document.querySelector(`[stream="src"][from="${cam}"]`).getAttribute('c'))
+                    button.setAttribute('selectable','cam')
+                    pop.appendChild(button)
+                 })
+                }
+                else{
+                 start.setAttribute('disabled','')
+                }
+                pop.append(start)
+                document.body.append(pop)   
+                if(!localStorage.getItem('last$$stream')){
+                    localStorage.setItem('last$$stream',pop.querySelectorAll('button[selectable="cam"]')[0].getAttribute('camindex'))
+                }
+                function refreshStream(){
+                document.querySelectorAll('button[selectable="cam"]').forEach(bt=>{
+                 if(bt.getAttribute('camindex')!=localStorage.getItem('last$$stream')){
+                    bt.removeAttribute('selected')
+                 }
+                 else{
+                    bt.setAttribute('selected','')
+                 }
+                })
+                }
+                refreshStream(.3)
+                pop.querySelectorAll('button[selectable="cam"]').forEach(bt=>{
+                    bt.addEventListener('click',function(){
+                       localStorage.setItem('last$$stream',bt.getAttribute('camindex'))
+                       refreshStream()
+                    })
+                })
+                //add
+                start.addEventListener('click',function(){
                 if(allcams.length!=0){
                     let recstate
                     S.emit('INFO','ifRecRunning',(st)=>{
                         recstate=st.running
-                        console.log(recstate)
                         if(recstate=='False'){
                             S.emit('Record',{command:"start",stream:0})
-                            ac.querySelector('span').innerText='stop'
                             //add notification
+                            localStorage.setItem('recording','yes')
                          }
                          else{
                             S.emit('Record',{command:"stop",stream:0})
-                            ac.querySelector('span').innerText='play_arrow'
+                            localStorage.setItem('recording','no')
                         }
+                updateStatus()
                     })
                 }
                 else{
                 notification({title:'No device connected',body:'Cannot start recording : 0 devices are connected to fluxLAN',timeout:5,level:'error'})
                 }
+                })
+
+            }
             }
             else if(act=='motion-detector'){
                 if(allcams.length==0){
