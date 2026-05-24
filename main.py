@@ -2,7 +2,8 @@ from flask import Flask,request,render_template,abort
 from flask_socketio import SocketIO,emit
 import os
 import sys
-from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
+if sys.platform=='win32':
+ from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
 import ctypes
 import base64
 from datetime import datetime
@@ -25,6 +26,7 @@ import requests
 import qrcode
 from io import BytesIO
 import cryptography #keep ts
+import time
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -57,6 +59,12 @@ MainIP='unavailable'
 MainPort='84'
 Protocol=NetworkStrength='unavailable'
 CloseWhenBattery=60
+LastMotionDetected=0
+MotionCooldown=10
+opener="open" if sys.platform == "darwin" else "xdg-open"
+
+SystemFolders=["Captures","Motion detected","FluxLAN"]
+AllowedExt=['jpg','mp4','log','png','fluxlan']
 
 root = tk.Tk()
 root.withdraw()
@@ -196,6 +204,9 @@ def UserError(user,title,description): # DONT USE YET
    S.emit('notification',{"user":user,"title":title,'description':description}) #change to S.to SID
 
 def HostNotification(title,description,fallbackicon=0x40):
+   if DEVELOPER_MODE:
+    FluxLog('Remove return from HostNotification',level='error',CoverText=True)
+   return
    if(sys.platform=='win32'):
        try:
         maintk=WindowsToaster("FluxLAN")
@@ -204,7 +215,7 @@ def HostNotification(title,description,fallbackicon=0x40):
         toast.audio=ToastAudio(AudioSource.Default, looping=0)
         maintk.show_toast(toast)
        except Exception as ex:
-          ctypes.windll.user32.MessageBoxW(0,f"{title.upper()}\n{"￣"*(int(len(description)/2))}\n{description}","FluxLAN",fallbackicon)
+          ctypes.windll.user32.MessageBoxW(0,f"{title.upper()}\n{'￣'*(int(len(description)/2))}\n{description}","FluxLAN",fallbackicon)
           FluxLog(f'Limited support - Windows version might be less than 10. Exeption : {ex}',level='warning',CoverText=True)
           #add to err log 10>win {ex}
        finally:
@@ -275,19 +286,25 @@ def openF(fl):
     if sys.platform=='win32':
        if fl=='user/Pictures/app':
         os.startfile(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
-        FluxLog(f'Opening {os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')}')
+        FluxLog(f'Opening {os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN")}')
     else:
        FluxLog(f'Couldnt execute function : FluxLAN do not fully support {sys.platform} yet. Report issue : {APP_SUPPORT}',level='error',KeyValues=True)        
 
 @main.route('/')
 def web():
  global Protocol
- Protocol=request.scheme
+ if Protocol!='unavailable':
+  Protocol=request.scheme
+
  return render_template('index.html')
 
 @main.route('/dashboard')
 def admin():
-   if(request.remote_addr!='127.0.0.1'):
+   global Protocol
+   if Protocol!='unavailable':
+    Protocol=request.scheme
+
+   if(request.remote_addr not in ['127.0.0.1','::1'] ) :
       FluxLog(f'Dashboard is fobidden to IPs other than 127.0.0.1 or localhost. Use localhost:{MainPort} or 127.0.0.1:{MainPort} instead.',level='warning',CoverText=True)
       abort(403)
       return 'sybau'
@@ -315,19 +332,36 @@ def openS(data):
  path=data.get('file')
  folder=data.get('folder')
  fileExt=data.get('filetype')
+ if folder not in SystemFolders or str(fileExt).lower() not in AllowedExt:
+    FluxLog(f'Open folder blocked : {folder} is not a Fluxlan accessed folder.',level='warning',KeyValues=True)
+    if DEVELOPER_MODE:
+       FluxLog(f'Add {folder} to system folders')
+    return
  if sys.platform=='win32':
    try:
-    subprocess.Popen(f'explorer /select,{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))}') 
+    subprocess.Popen([
+      "explorer",f"/select,{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))}"
+    ]) 
    except Exception as err:
     FluxLog(f'Couldnt execute function : {err}',level='error',KeyValues=True)
  else: 
-   os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))
+   #stackoverflow/a/17317468 # Posted by user4815162342
+   subprocess.call([opener,os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}")])
    FluxLog(f'Some of the features might not work. FluxLan doesnt fully support {sys.platform} yet. Report issue : {APP_SUPPORT}',level='warning',KeyValues=True)        
  FluxLog(f'Opening {os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))}')
 
 @S.on('OpenDir')
 def openD(path):
-    os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",path))
+    if path not in SystemFolders:
+     FluxLog(f'Open folder blocked : {path} is not a Fluxlan accessed folder.',level='warning',KeyValues=True)
+     if DEVELOPER_MODE:
+       FluxLog(f'Add {path} to system folders',level='high')
+     return
+    if sys.platform=='win32':
+     os.startfile(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",path))
+    else:
+      #stackoverflow/a/17317468 # Posted by user4815162342
+      subprocess.call([opener,os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",path)])
     FluxLog(f'Opening FluxLan media folder')
 
 @S.on('Record')
@@ -358,10 +392,11 @@ def record(data):
              if eachbyte is not None:
                firstfr=eachbyte
                break
-            except:
-               pass
+            except Exception as err:
+               FluxLog(f"Error in recording : {err}",level='error',CoverText=True)
            if firstfr is None:
               FluxLog('No frames found',level='error')
+              return
            recheight,recwidth=firstfr.shape[:2]
            saved=os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN","Captures",f"Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}.mp4")
            mainencd=cv2.VideoWriter_fourcc(*'mp4v')
@@ -442,13 +477,20 @@ def MotionDetect():
             
             for iN in contrs:
                if cv2.contourArea(iN) > 1200:#make ts adjustable
+                  global LastMotionDetected
                   datetimeX=datetime.now()
-                  #add hostnotiff if pref notifications secr
-                  with open(f'{os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected",f"Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}.jpg")}',"wb") as im:
+                  #add hostnotiff if pref notifications secr v1+
+                  currtime=time.time()
+                  if currtime-LastMotionDetected<MotionCooldown:
+                     return
+                  
+                  with open(f"{os.path.join(os.path.expanduser('~'),'Pictures','FluxLAN','Motion detected',f"Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}.jpg")}","wb") as im:
                    im.write(base64.b64decode(base))        
-                   FluxLog(f'Motion detected in {LASTFrame.get('camname')} at {datetimeX.time()}',CoverText=True)
-                   AdminNotification(title=f'Motion detected in {LASTFrame.get('camname')}',body=f"""Motion detected in {LASTFrame.get('camname')}. Image captured <span onclick="openDir('Motion detected')">Captures/</span><span button="open" onclick="openS('Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}','Motion detected','jpg')">open</span>""",timeout='5')
+                   FluxLog(f"Motion detected in {LASTFrame.get('camname')} at {datetimeX.time()}",CoverText=True)
+                   AdminNotification(title=f'Motion detected in {LASTFrame.get("camname")}',body=f"""Motion detected in {LASTFrame.get('camname')}. Image captured <span onclick="openDir('Motion detected')">Captures/</span><span button="open" onclick="openS('Capture {str(datetimeX.date())}_{str(datetimeX.time()).replace(':','-')}','Motion detected','jpg')">open</span>""",timeout='5')
+                   LastMotionDetected=currtime
             MotionFrameLS=eachfr
+            
 
 @S.on('MotionDetection')
 def command(data):
