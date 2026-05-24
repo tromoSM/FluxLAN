@@ -186,7 +186,7 @@ window.addEventListener('DOMContentLoaded',function(){
 
     S.on('Stream',function(stream){
         cammessage('hide')
-        if(stream.stream==0){
+        if(stream.stream==1){
         document.querySelectorAll(`[stream='src']`)[0].src=stream.rec
         document.querySelectorAll(`[stream='src']`)[0].setAttribute('from',stream.camname)
         document.querySelector(`[stream='src']`).style.transform=`rotate(${stream.ori}deg)` //change this to pref()
@@ -203,7 +203,10 @@ window.addEventListener('DOMContentLoaded',function(){
                 let battery=document.createElement('span')
                 battery.setAttribute('battery','')
                 battery.className='material-symbols-rounded'
-                strpanel.appendChild(battery)
+                //let nametag=document.createElement('p')
+                //nametag.setAttribute('nametag','')
+                //nametag.innerText=stream.camname
+                strpanel.append(battery)
                 rel.append(crStr,strpanel)
                 document.querySelector('cover').appendChild(rel)
             }
