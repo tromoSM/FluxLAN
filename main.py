@@ -36,7 +36,7 @@ APP_LINK_LOOKUP='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/r
 APP_BUILD='beta'
 APP_SUPPORT='https://tromosm.ct.ws/?feedback=true&utm_source=normal_fluxlan_console'
 APP_SUPPORT_LTS_FEEDBACK="https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=lts_fluxlan_console"
-
+APP_ANALYTICS_LTS='https://tromosm.github.io/tromoSM-analytics/analytics/fluxlan'
 
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 
@@ -58,10 +58,12 @@ MotionFrameLS=None
 MainIP='unavailable'
 MainPort='84'
 Protocol=NetworkStrength='unavailable'
-CloseWhenBattery=60
+CloseWhenBattery=0 #v1+
 LastMotionDetected=0
 MotionCooldown=10
 opener="open" if sys.platform == "darwin" else "xdg-open"
+FirstTime=False
+WelcomePageOpened=False
 
 SystemFolders=["Captures","Motion detected","FluxLAN"]
 AllowedExt=['jpg','mp4','log','png','fluxlan']
@@ -148,6 +150,7 @@ linkLookup()
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
+    FirstTime=True
     FluxLog('First time running : Creating media folders',KeyValues=True)
 
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN','Captures')):
@@ -300,7 +303,7 @@ def web():
 
 @main.route('/dashboard')
 def admin():
-   global Protocol
+   global Protocol,WelcomePageOpened
    if Protocol!='unavailable':
     Protocol=request.scheme
 
@@ -308,6 +311,10 @@ def admin():
       FluxLog(f'Dashboard is fobidden to IPs other than 127.0.0.1 or localhost. Use localhost:{MainPort} or 127.0.0.1:{MainPort} instead.',level='warning',CoverText=True)
       abort(403)
       return 'sybau'
+   if FirstTime:
+    if not WelcomePageOpened:
+     webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={sys.platform}")
+     WelcomePageOpened=True
    return render_template('tromoSM-admin.html')
 
 @S.on('Pref')
@@ -549,7 +556,7 @@ def export(jsond):
    tk_q.put(saveExport)
 
 if not DEVELOPER_MODE:
- FluxLog('Opening dashboard')
+ FluxLog('Opening dashboard')    
  webbrowser.open(f'https://localhost:{MainPort}/dashboard')
 
 @S.on('importdata')
