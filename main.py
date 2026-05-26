@@ -34,7 +34,7 @@ APP_DATE='2026/05'
 APP_UPDATECHK_ROOT='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/repos/FLUXLAN/manifest.json'
 APP_LINK_LOOKUP='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/root/info.json'
 APP_BUILD='beta'
-APP_SUPPORT='https://tromosm.ct.ws/?feedback=true&utm_source=normal_fluxlan_console'
+APP_SUPPORT='https://tromosm.gt.tc/?feedback=true&utm_source=normal_fluxlan_console'
 APP_SUPPORT_LTS_FEEDBACK="https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=lts_fluxlan_console"
 APP_ANALYTICS_LTS='https://tromosm.github.io/tromoSM-analytics/analytics/fluxlan'
 
@@ -313,7 +313,7 @@ def admin():
       return 'sybau'
    if FirstTime:
     if not WelcomePageOpened:
-     webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={sys.platform}")
+     webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={sys.platform}&o={MainPort}")
      WelcomePageOpened=True
    return render_template('tromoSM-admin.html')
 
