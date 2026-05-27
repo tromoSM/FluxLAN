@@ -855,11 +855,15 @@ window.addEventListener('DOMContentLoaded',function(){
                  let infullx=document.createElement('flpop')
                  infullx.setAttribute('closing','')
                  infullx.setAttribute('privacy','')
-//                 S.emit('INFO','pp',(privacypolicy)=>{
-//                    if(privacypolicy.version<)
-//                 })
-//                 if()
-// add auto updater
+                 let close=document.createElement('button')
+                 close.innerText='close'
+                 close.setAttribute('close','')
+                 close.className='material-symbols-rounded'
+                 close.addEventListener('click',async function(){
+                        infullx.setAttribute('closing','')
+                        await sleep(200)
+                        fullx.remove()
+                 })
                  infullx.innerHTML=`
                  <h1><strong>Privacy statement</strong></h1>
                  <p>This application shares limited technical information once during setup, including:</p>
@@ -870,16 +874,21 @@ window.addEventListener('DOMContentLoaded',function(){
                  </ul>
                  <p>This information is used only to help improve compatibility, stability, and overall support across different platforms and releases.</p>
                  `
-                 let close=document.createElement('button')
-                 close.innerText='close'
-                 close.setAttribute('close','')
-                 close.className='material-symbols-rounded'
-                 close.addEventListener('click',async function(){
-                        infullx.setAttribute('closing','')
-                        await sleep(200)
-                        fullx.remove()
-                 })
-                 infullx.append(close)
+                 if(navigator.onLine){
+                 await fetch(UPDATECHKROOT).then(inf=>inf.json()).then(info=>{
+                    S.emit('INFO','pp',(privacypolicy)=>{
+                        if(privacypolicy.version<info.legal.privacy_policy.version){
+                            infullx.innerHTML=info.legal.privacy_policy.innerhtml
+                        }      
+                        if(!infull.querySelector('[close]')){
+                          infullx.append(close)
+                        }
+                    })
+                  })
+                 } 
+                 if(!infull.querySelector('[close]')){
+                    infullx.append(close)
+                 }
                  fullx.appendChild(infullx)
                  document.body.append(fullx)
                  await sleep(200)
@@ -887,19 +896,9 @@ window.addEventListener('DOMContentLoaded',function(){
                  refreshTooltip()
                  refreshLinks()
                 })
-                
 
                 social.append(github,otherprojx,feedback,privacy)
-/*ADD 
 
-
-
-
-
-
-
- as privacy statement popup
-*/
                  let footer=document.createElement('flexrr')
                  let copyright=document.createElement('p')
                  copyright.setAttribute('warning','')
@@ -1109,5 +1108,4 @@ window.addEventListener('DOMContentLoaded',function(){
         importb.innerText='Success'
    }
     })
-
 })
