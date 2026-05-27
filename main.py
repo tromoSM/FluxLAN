@@ -37,6 +37,7 @@ APP_BUILD='beta'
 APP_SUPPORT='https://tromosm.gt.tc/?feedback=true&utm_source=normal_fluxlan_console'
 APP_SUPPORT_LTS_FEEDBACK="https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=lts_fluxlan_console"
 APP_ANALYTICS_LTS='https://tromosm.github.io/tromoSM-analytics/analytics/fluxlan'
+APP_PRIVACY_POLICY_VERSION=2
 
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 
@@ -284,6 +285,8 @@ def ask(q):
       return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD,"ip":MainIP,'port':MainPort,'protocol':Protocol,"strength":NetworkStrength}
    elif q=='qr':
       return {"qr": MainQR,"link":f"https://{MainIP}:{MainPort}"}
+   elif q=='pp':
+      return {"version":APP_PRIVACY_POLICY_VERSION}
 @S.on('OpenFolder')
 def openF(fl):
     if sys.platform=='win32':
