@@ -248,3 +248,9 @@ button[busy]::before{filter: blur(10px); width: 100%;height: 100%;content: '';po
 [warning=large]{font-size: 13px;font-weight: 700;margin: 6px 0px 1px 0px;}
 [button=open]{background: #07070742;font-weight: 600; padding: 2px 6px; border-radius: 50px; mix-blend-mode: screen; color: beige;position: absolute; right: 5px; top: 12px;cursor: pointer;}
 button[start]{padding: 3px 7px;box-sizing: border-box;margin-top: 10px !important;}[start-recording] button{margin: 1px;}
+flpop[privacy] h1{font-size: 25px;font-weight: 818;margin: 0;margin-bottom: 12px;}
+flpop[privacy] p{padding: 0;margin: 0;font-size: 14px;color: #575555;}  
+flpop[privacy]{box-shadow: 0px 6px 10px #00000029;}
+flpop[privacy] [close]{width: 24px;height: 24px;transition: 0.1s; position: absolute;top: 0;right: 0;border-radius: 50px;border: none;font-size: 17px;display: flex;align-items: center;justify-content: center;margin: 14px;padding: 4px;box-sizing: content-box;cursor: pointer;  background: #00000026;color: white;}
+flpop[privacy] [close]:hover{transform: rotate(180deg);}
+[tooltip="open privacy statement"]{cursor: pointer;}
