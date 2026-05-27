@@ -23,5 +23,5 @@ Turn your old phones into a local camera network
  - [x] Export and Import preference system
  - [x] Link devices with QR
 
-#### Currently working on : Analytics and welcome page
+#### Currently working on : Privacy statement and other legal documents
 ###### started on 26.04.23
