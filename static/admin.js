@@ -79,6 +79,10 @@ window.addEventListener('DOMContentLoaded',function(){
     function refreshLinks(){
         //add mutationobserver for standalone
         document.querySelectorAll('[openlink]').forEach(yo=>{
+            if(yo.getAttribute('openlink-indexed')){
+                return
+            }
+            yo.setAttribute('openlink-indexed','true')
             yo.addEventListener('click',function(){
                 let temphref=document.createElement('a')
                 temphref.href=yo.getAttribute('openlink')
@@ -666,8 +670,8 @@ window.addEventListener('DOMContentLoaded',function(){
                 }
             }
             else if(act=='link-camera'){
-                if(document.querySelector('flpop')){
-                    document.querySelectorAll('flpop').forEach(async pop=>{
+                if(document.querySelector(`flpop[${act}]`)){
+                    document.querySelectorAll(`flpop[${act}]`).forEach(async pop=>{
                         pop.setAttribute('closing','')
                         await sleep(200)
                         pop.closest('f').remove()
@@ -677,6 +681,7 @@ window.addEventListener('DOMContentLoaded',function(){
                  S.emit('INFO','qr',async (qr)=>{
                    let full=document.createElement('f')
                    let infull=document.createElement('flpop')
+                   infull.setAttribute(act,'')
                    infull.setAttribute('closing','')
                    im=document.createElement('img')
                    infull.setAttribute('flexR','')
@@ -710,8 +715,8 @@ window.addEventListener('DOMContentLoaded',function(){
              } 
             }
             else if(act=='advanced'){
-                if(document.querySelector('flpop')){
-                    document.querySelectorAll('flpop').forEach(async pop=>{
+                if(document.querySelector(`flpop[${act}]`)){
+                    document.querySelectorAll(`flpop[${act}]`).forEach(async pop=>{
                         pop.setAttribute('closing','')
                         await sleep(200)
                         pop.closest('f').remove()
@@ -724,6 +729,7 @@ window.addEventListener('DOMContentLoaded',function(){
                  let full=document.createElement('f')
                  let infull=document.createElement('flpop')
                  infull.setAttribute('closing','')
+                 infull.setAttribute(act,'')
                  let inscroll=document.createElement('scrollable')
                  infull.appendChild(inscroll)
                  let imim=document.createElement('img')
@@ -832,9 +838,68 @@ window.addEventListener('DOMContentLoaded',function(){
                     console.error('user offline')
                     }
                   }
+                let privacy=document.createElement('p')
+                privacy.innerText='privacy statement'
+                privacy.setAttribute('tooltip','open privacy statement')
+                privacy.setAttribute('warning','')
+                privacy.setAttribute('privacy','')
+                privacy.addEventListener('click',async function(){
+                 if(document.querySelector(`flpop[privacy]`)){
+                    document.querySelectorAll(`flpop[privacy]`).forEach(async pop=>{
+                        pop.setAttribute('closing','')
+                        await sleep(200)
+                        pop.closest('f').remove()
+                    })
+                 }
+                 let fullx=document.createElement('f')
+                 let infullx=document.createElement('flpop')
+                 infullx.setAttribute('closing','')
+                 infullx.setAttribute('privacy','')
+//                 S.emit('INFO','pp',(privacypolicy)=>{
+//                    if(privacypolicy.version<)
+//                 })
+//                 if()
+// add auto updater
+                 infullx.innerHTML=`
+                 <h1><strong>Privacy statement</strong></h1>
+                 <p>This application shares limited technical information once during setup, including:</p>
+                 <ul>
+                  <li>Application version</li>
+                  <li>Operating system</li>
+                  <li>Application build information</li>
+                 </ul>
+                 <p>This information is used only to help improve compatibility, stability, and overall support across different platforms and releases.</p>
+                 `
+                 let close=document.createElement('button')
+                 close.innerText='close'
+                 close.setAttribute('close','')
+                 close.className='material-symbols-rounded'
+                 close.addEventListener('click',async function(){
+                        infullx.setAttribute('closing','')
+                        await sleep(200)
+                        fullx.remove()
+                 })
+                 infullx.append(close)
+                 fullx.appendChild(infullx)
+                 document.body.append(fullx)
+                 await sleep(200)
+                 infullx.removeAttribute('closing','')
+                 refreshTooltip()
+                 refreshLinks()
+                })
+                
 
-                 social.append(github,otherprojx,feedback)
+                social.append(github,otherprojx,feedback,privacy)
+/*ADD 
 
+
+
+
+
+
+
+ as privacy statement popup
+*/
                  let footer=document.createElement('flexrr')
                  let copyright=document.createElement('p')
                  copyright.setAttribute('warning','')
