@@ -37,7 +37,16 @@ window.addEventListener('DOMContentLoaded',function(){
         let war=document.createElement('p')
         war.setAttribute('cammsg','')
         war.innerText='No devices detected'
-        full.appendChild(war)
+        let link=document.createElement('button')
+        link.innerText='Link device'
+        link.setAttribute('nonusrpageinner','')
+        link.addEventListener('click',function(s){
+            s.stopPropagation()
+            if(document.querySelector('[action="link-camera"]')){
+                document.querySelector('[action="link-camera"]').click()
+            }
+        })
+        full.append(war,link)
         if(a=='show'){
          if(!document.querySelector('[cammsg]')){
             document.body.appendChild(full)
@@ -872,6 +881,7 @@ window.addEventListener('DOMContentLoaded',function(){
                   <li>Operating system</li>
                   <li>Application build information</li>
                  </ul>
+                 <p warning>example : v1.0(stable)-windows</p>
                  <p>This information is used only to help improve compatibility, stability, and overall support across different platforms and releases.</p>
                  `
                  if(navigator.onLine){
@@ -879,6 +889,9 @@ window.addEventListener('DOMContentLoaded',function(){
                     S.emit('INFO','pp',(privacypolicy)=>{
                         if(privacypolicy.version<info.legal.privacy_policy.version){
                             infullx.innerHTML=info.legal.privacy_policy.innerhtml
+                            console.log(`using online privacy policy.`)
+                            console.log(`    offline version: ${privacypolicy.version}\n    online version: ${info.legal.privacy_policy.version}`)
+                            console.log(`online version is ${parseInt(info.legal.privacy_policy.version)-parseInt(privacypolicy.version)} versions ahead.`)
                         }      
                         if(!infull.querySelector('[close]')){
                           infullx.append(close)
@@ -1030,10 +1043,15 @@ window.addEventListener('DOMContentLoaded',function(){
             cammessage('show')
         }
     })
-    S.on('adminJOIN',function(user){
+    S.on('adminJOIN',async function(user){
         //message(user)
         notification({title:`${user} joined`,body:`${user} joined.`,icon:'static/Assets/favicon.png',timeout:3})
         cammessage('hide')
+        if(document.querySelector('flpop[link-camera]')){
+            document.querySelector('flpop[link-camera]').setAttribute('closing','')
+            await sleep(200)
+            document.querySelector('flpop[link-camera]').closest('f').remove()
+        }
     })
     document.querySelectorAll(`[stream='src']`)[0].addEventListener('load',function(){
         document.querySelectorAll(`[stream='src']`)[0].removeAttribute('empty')
@@ -1108,4 +1126,5 @@ window.addEventListener('DOMContentLoaded',function(){
         importb.innerText='Success'
    }
     })
+
 })
