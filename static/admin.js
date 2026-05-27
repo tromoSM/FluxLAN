@@ -46,7 +46,9 @@ window.addEventListener('DOMContentLoaded',function(){
                 document.querySelector('[action="link-camera"]').click()
             }
         })
-        full.append(war,link)
+        let camcon=document.createElement('p')
+        camcon.innerHTML='<span camicon class="material-symbols-rounded">devices</span>'
+        full.append(camcon,war,link)
         if(a=='show'){
          if(!document.querySelector('[cammsg]')){
             document.body.appendChild(full)
@@ -279,6 +281,7 @@ window.addEventListener('DOMContentLoaded',function(){
                         await sleep(300)
                         await document.querySelector(`popup[${act}]`).remove()
                     })()
+                ac.setAttribute('tab','')
                 }
                 else{
                 if(document.querySelector(`popup:not([${act}])`)){
@@ -290,6 +293,7 @@ window.addEventListener('DOMContentLoaded',function(){
                     })()
                     })
                 }
+                ac.setAttribute('tab','open')
                 let pop=document.createElement('popup')
                 pop.style.left=pos.left+'px'
                 pop.style.top=pos.top+41+'px'
@@ -420,6 +424,7 @@ window.addEventListener('DOMContentLoaded',function(){
                         await sleep(300)
                         await document.querySelector(`popup[${act}]`).remove()
                     })()
+                    ac.setAttribute('tab','')
                 }
                 else{
                 if(document.querySelector(`popup:not([${act}])`)){
@@ -431,6 +436,7 @@ window.addEventListener('DOMContentLoaded',function(){
                     })()
                     })
                 }
+                ac.setAttribute('tab','open')
                 let pop=document.createElement('popup')
                 pop.style.left=pos.left+'px'
                 pop.style.top=pos.top+41+'px'
@@ -724,6 +730,7 @@ window.addEventListener('DOMContentLoaded',function(){
              } 
             }
             else if(act=='advanced'){
+                ac.setAttribute('tab','')
                 if(document.querySelector(`flpop[${act}]`)){
                     document.querySelectorAll(`flpop[${act}]`).forEach(async pop=>{
                         pop.setAttribute('closing','')
@@ -732,6 +739,7 @@ window.addEventListener('DOMContentLoaded',function(){
                     })
                 }
                 else{
+                 ac.setAttribute('tab','open')
                  S.emit('refresh','NetworkInfo',(refreshed)=>{
                    strength=refreshed.strength
                  })
