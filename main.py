@@ -198,7 +198,10 @@ def joinev(user):
 def leaveev(user):
     if user in ALLUSERS:
         FluxLog(f'Camera disconnected : {user}',KeyValues=True)
-        ALLUSERS.remove(user)
+        try:
+         ALLUSERS.remove(user)
+        except Exception as err:
+         FluxLog(f'Error in leave event : {err}',KeyValues=True,level='error')          
     S.emit('adminLEAVE',user)  
     S.emit('CAMlist',ALLUSERS)  
 
