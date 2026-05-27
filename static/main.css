@@ -255,3 +255,7 @@ flpop[privacy] [close]{width: 24px;height: 24px;transition: 0.1s; position: abso
 flpop[privacy] [close]:hover{transform: rotate(180deg);}
 [tooltip="open privacy statement"]{cursor: pointer;}
 [nonusrpageinner]{pointer-events: all;  background: #0000003d;color: white;border: none;border-radius: 50px;padding: 5px 10px;cursor: pointer;}
+[camicon]{  font-size: 66px;color: #c2c2c2;}
+p:has([camicon]){  margin: 0;transform: translateY(20px);font-variation-settings: "FILL" 1;}
+[tab]{transition: font-variation-settings 0.2s; font-variation-settings:'FILL' 0;}
+[tab='open']{font-variation-settings: "FILL" 1;}
