@@ -27,6 +27,7 @@ import qrcode
 from io import BytesIO
 import cryptography #keep ts
 import time
+import shutil
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -59,15 +60,22 @@ MotionFrameLS=None
 MainIP='unavailable'
 MainPort='84'
 Protocol=NetworkStrength='unavailable'
-CloseWhenBattery=0 #v1+
+CloseWhenBattery=0 #v1+. val will chng
 LastMotionDetected=0
 MotionCooldown=10
 opener="open" if sys.platform == "darwin" else "xdg-open"
 FirstTime=False
 WelcomePageOpened=False
+APPROOT=os.path.join(os.getenv("APPDATA"),"FluxLAN")
+VERSION_DATA=os.path.join(APPROOT,'version.version')
 
 SystemFolders=["Captures","Motion detected","FluxLAN"]
 AllowedExt=['jpg','mp4','log','png','fluxlan']
+FluxLanFilelist=[
+   'admin.js','main.js','socket.io.min.js','main.css','InterVar.css','MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf',
+   'favicon.png','favicon-l.png','logo-w.png','logo.png','logo.svg',
+   'index.html','tromoSM-admin.html'
+]
 
 root = tk.Tk()
 root.withdraw()
@@ -147,7 +155,6 @@ def linkLookup():
          FluxLog(f'Main support site is not responding : using fallback site',level='warning',KeyValues=True)
 
 linkLookup()
-
 # FIRST TIME
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN')):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN'))
@@ -159,6 +166,41 @@ if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',
 
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected")):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected"))
+
+if(DEVELOPER_MODE):
+   FluxLog(f'Appdata folder : {APPROOT}',KeyValues=True)
+os.makedirs(APPROOT,exist_ok=True)
+def meipasspath():
+   if getattr(sys,'frozen',False):
+      return sys._MEIPASS
+   return os.path.dirname(os.path.abspath(__file__))
+def returnMovedVer():
+   if not os.path.exists(VERSION_DATA):
+      return None
+   else:
+      with open(VERSION_DATA,'r') as ver:
+         return ver.read().strip()
+def updatedir(new,old):
+   if os.path.exists(old):
+      try:
+       shutil.rmtree(old)
+      except PermissionError as er:
+         for file in os.listdir(old):
+          if file not in FluxLanFilelist:
+             try:
+                os.remove(os.path.join(old,file))
+             except Exception as ex:
+                FluxLog(ex,level='error',CoverText=True)
+                continue
+         FluxLog(f'Access is denied : {er}',level='error')
+   shutil.copytree(new,old,dirs_exist_ok=True)
+
+if returnMovedVer()!=APP_VERSION:
+ FluxLog(f'New version detected : {'{'}{returnMovedVer()} -> {APP_VERSION}{'}'} updating cached files.',KeyValues=True)
+ updatedir(os.path.join(meipasspath(),'static'),os.path.join(APPROOT,'static'))
+ updatedir(os.path.join(meipasspath(),'templates'),os.path.join(APPROOT,'templates'))
+ with open(VERSION_DATA,'w') as ver:
+    ver.write(APP_VERSION)
 
 maindatadir=platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM')   
 
@@ -258,7 +300,7 @@ def ini(dih):
     print(len(MAINUSERSDI))
 
 @S.on('disconnect')
-def left():
+def left(reason):
     curUser=MAINUSERSDI.get(request.sid,request.sid)
     leaveev(curUser)      
     MAINUSERSDI.pop(request.sid,None)
