@@ -16,7 +16,7 @@ Turn your old phones into a local camera network
  - [x] Record
  - [x] List devices
  - [ ] ~~hover to zoom~~
- - [ ] Audio support
+ - [ ] ~~Audio support~~
  - [x] update-check system
  - [ ] close when low battery
  - [x] Motion detection
