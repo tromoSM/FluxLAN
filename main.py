@@ -4,6 +4,8 @@ import os
 import sys
 if sys.platform=='win32':
  from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
+ from pystray import Icon,Menu,MenuItem
+ from PIL import Image
 import ctypes
 import base64
 from datetime import datetime
@@ -36,9 +38,11 @@ APP_UPDATECHK_ROOT='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/mai
 APP_LINK_LOOKUP='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/root/info.json'
 APP_BUILD='beta'
 APP_SUPPORT='https://tromosm.gt.tc/?feedback=true&utm_source=normal_fluxlan_console'
-APP_SUPPORT_LTS_FEEDBACK="https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=lts_fluxlan_console"
+APP_SUPPORT_LTS_FEEDBACK="https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=lts_fluxlan_console_n_tray"
 APP_ANALYTICS_LTS='https://tromosm.github.io/tromoSM-analytics/analytics/fluxlan'
 APP_PRIVACY_POLICY_VERSION=2
+APP_GITHUB='https://github.com/tromoSM/FluxLAN'
+APP_PAGE_OTHR_PROJ="https://tromosm.github.io/tromoSM/t/?utm_source=flux_otherprojects_tray#project"
 
 main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
 
@@ -49,6 +53,8 @@ ALLUSERS=[]
 RECORDED_DATA=[]
 
 DEVELOPER_MODE=True
+USETRAYICON=True
+
 LASTFrame='__not-found__'
 orientation='up'
 RecordingRunning=False
@@ -66,6 +72,8 @@ MotionCooldown=10
 opener="open" if sys.platform == "darwin" else "xdg-open"
 FirstTime=False
 WelcomePageOpened=False
+ConsoleON=DEVELOPER_MODE
+
 APPROOT=os.path.join(os.getenv("APPDATA"),"FluxLAN")
 VERSION_DATA=os.path.join(APPROOT,'version.version')
 
@@ -103,6 +111,55 @@ def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False):
    LogFunc=Loglevel.get(level)
    LogFunc(f'{" "*padding}{message}') 
 
+#TRAYICON
+kernel=ctypes.WinDLL('kernel32')
+user=ctypes.WinDLL('user32')
+
+def refreshConsole():  
+ if kernel.GetConsoleWindow():
+  user.ShowWindow(kernel.GetConsoleWindow(),5 if ConsoleON else 0)
+
+def ConsoleState(icon,item):
+   global ConsoleON
+   ConsoleON=not ConsoleON
+   refreshConsole()
+refreshConsole()
+
+def CloseSelf(ver):
+   if(ver=='verified'):
+    FluxLog('Closing FluxLAN',level='high',CoverText=True)
+    AdminNotification(title='FluxLAN is closing',body='FluxLAN will be closed in a minute',timeout="never")
+    S.emit('closing','normal')
+    os.kill(os.getpid(),signal.SIGINT)
+
+def StartTray():
+            imicon=Image.open(os.path.join('static','Assets','icon-w.ico'))
+            menu=Menu(
+               MenuItem(f'𝗙𝗹𝘂𝘅𝗟𝗔𝗡 - {APP_VERSION}',None,enabled=False),
+               Menu.SEPARATOR,
+               MenuItem('open dashboard',lambda item,icon:
+                        webbrowser.open_new_tab(f'https://localhost:{MainPort}/dashboard')
+                        ),
+               Menu.SEPARATOR,
+               MenuItem('debug console',ConsoleState,checked=lambda item:ConsoleON),
+               MenuItem('advanced info',Menu(
+                  MenuItem(f'local ip : {MainIP}',None,enabled=False),
+                  MenuItem(f'running on : port {MainPort}',None,enabled=False),
+                  MenuItem(f'appdata path : {APPROOT}',None,enabled=False),
+                  Menu.SEPARATOR,
+                  MenuItem(f'version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
+                  MenuItem(f'developer mode : {DEVELOPER_MODE}',None,enabled=False)
+               )),
+               MenuItem('support/contact us',Menu(
+                  MenuItem('github',lambda it,ic:webbrowser.open_new_tab(APP_GITHUB)),
+                  MenuItem('other projects from developer',lambda it,ic: webbrowser.open_new_tab(APP_PAGE_OTHR_PROJ)),
+                  MenuItem('feedback and request features',lambda it,ic:webbrowser.open_new_tab(APP_SUPPORT)),
+                  MenuItem('contact by email',lambda it,ic:webbrowser.open_new_tab('mailto:tromosm7@gmail.com'))
+               )),
+               MenuItem('close fluxlan',lambda it,ic:CloseSelf('verified'))
+            )
+            icon=Icon('FluxLAN',imicon,'FluxLAN',menu=menu)
+            icon.run()
 #STARTUP 
 terminalsize=os.get_terminal_size()
 if(terminalsize.columns>=(107+len(APP_VERSION))):
@@ -253,6 +310,7 @@ def UserError(user,title,description): # DONT USE YET
    S.emit('notification',{"user":user,"title":title,'description':description}) #change to S.to SID
 
 def HostNotification(title,description,fallbackicon=0x40):
+   #use icon.notify in v1+
    if DEVELOPER_MODE:
     FluxLog('Remove return from HostNotification',level='error',CoverText=True)
    return
@@ -509,11 +567,7 @@ def cleared(user):
 
 @S.on('CloseSelf')
 def close(ver):
-   if(ver=='verified'):
-    FluxLog('Closing FluxLAN',level='high',CoverText=True)
-    AdminNotification(title='FluxLAN is closing',body='FluxLAN will be closed in a minute',timeout="never")
-    S.emit('closing','normal')
-    os.kill(os.getpid(),signal.SIGINT)
+   CloseSelf(ver)
 
 def MotionDetect():
       global MotionFrameLS,MotionDetecting,LASTFrame
@@ -646,7 +700,9 @@ def change(status):
 if(__name__=="__main__"):
     MainServeThread=threading.Thread(
        target=lambda:S.run(main,debug=True,host='0.0.0.0',port=MainPort,ssl_context='adhoc',use_reloader=False),
-       daemon=True,)
+       daemon=True)
+    if USETRAYICON:
+        threading.Thread(target=StartTray,daemon=True).start()
     MainServeThread.start()
     root.after(10,tk_qu)
     root.mainloop()
