@@ -23,5 +23,5 @@ Turn your old phones into a local camera network
  - [x] Export and Import preference system
  - [x] Link devices with QR
 
-#### Currently working on : Privacy statement and other legal documents
+#### Currently working on : Tray icon and tray icon actions
 ###### started on 26.04.23
