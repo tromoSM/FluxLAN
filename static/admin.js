@@ -723,8 +723,14 @@ window.addEventListener('DOMContentLoaded',function(){
                    let descc=document.createElement('p')
                    descc.setAttribute('warning','')
                    descc.innerText=`Click advanced ❯ Continue to ${qr.link}(unsafe).\n This screen may appear because the cert is self-signed.`
-                   desc.innerText='All the devices must be connected to the same network.'
-                   flexc.append(title,desc,sidetitle,descc)
+                   desc.innerText='Both devices must be connected to the same network.'
+                   let safari=document.createElement('p')
+                   safari.innerText='Using safari?'
+                   safari.setAttribute('warning','large')
+                   let safarifix=document.createElement('p')
+                   safarifix.setAttribute('warning','')
+                   safarifix.innerText='Safari on iOS might behave different than other browsers. If Safari loops between the warning and app page, restart Safari.'
+                   flexc.append(title,desc,sidetitle,descc,safari,safarifix)
                    infull.append(im,flexc)
                    full.append(infull)
                    document.body.append(full)
