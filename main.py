@@ -116,6 +116,7 @@ kernel=ctypes.WinDLL('kernel32')
 user=ctypes.WinDLL('user32')
 
 def refreshConsole():  
+ # add sys windows and fallback
  if kernel.GetConsoleWindow():
   user.ShowWindow(kernel.GetConsoleWindow(),5 if ConsoleON else 0)
 
@@ -137,12 +138,13 @@ def StartTray():
             menu=Menu(
                MenuItem(f'𝗙𝗹𝘂𝘅𝗟𝗔𝗡 - {APP_VERSION}',None,enabled=False),
                Menu.SEPARATOR,
-               MenuItem('open dashboard',lambda item,icon:
+               MenuItem('Open dashboard',lambda item,icon:
                         webbrowser.open_new_tab(f'https://localhost:{MainPort}/dashboard')
                         ),
+               MenuItem('Link device',lambda it,ic:webbrowser.open(f'https://localhost:{MainPort}/dashboard?linkcam=true')),
                Menu.SEPARATOR,
-               MenuItem('debug console',ConsoleState,checked=lambda item:ConsoleON),
-               MenuItem('advanced info',Menu(
+               MenuItem('Debug console',ConsoleState,checked=lambda item:ConsoleON),
+               MenuItem('Advanced info',Menu(
                   MenuItem(f'local ip : {MainIP}',None,enabled=False),
                   MenuItem(f'running on : port {MainPort}',None,enabled=False),
                   MenuItem(f'appdata path : {APPROOT}',None,enabled=False),
@@ -150,13 +152,15 @@ def StartTray():
                   MenuItem(f'version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
                   MenuItem(f'developer mode : {DEVELOPER_MODE}',None,enabled=False)
                )),
-               MenuItem('support/contact us',Menu(
-                  MenuItem('github',lambda it,ic:webbrowser.open_new_tab(APP_GITHUB)),
-                  MenuItem('other projects from developer',lambda it,ic: webbrowser.open_new_tab(APP_PAGE_OTHR_PROJ)),
-                  MenuItem('feedback and request features',lambda it,ic:webbrowser.open_new_tab(APP_SUPPORT)),
-                  MenuItem('contact by email',lambda it,ic:webbrowser.open_new_tab('mailto:tromosm7@gmail.com'))
+               MenuItem('Support/Contact us',Menu(
+                  MenuItem('Github',lambda it,ic:webbrowser.open_new_tab(APP_GITHUB)),
+                  MenuItem('Other projects from developer',lambda it,ic: webbrowser.open_new_tab(APP_PAGE_OTHR_PROJ)),
+                  MenuItem('Feedback and request features',lambda it,ic:webbrowser.open_new_tab(APP_SUPPORT)),
+                  MenuItem('Contact by email',lambda it,ic:webbrowser.open_new_tab('mailto:tromosm7@gmail.com'))
                )),
-               MenuItem('close fluxlan',lambda it,ic:CloseSelf('verified'))
+               Menu.SEPARATOR,
+               MenuItem('Check for updates',lambda it,ic:webbrowser.open(f'https://localhost:{MainPort}/dashboard?checkupdate=true')),
+               MenuItem('Close Fluxlan',lambda it,ic:CloseSelf('verified'))
             )
             icon=Icon('FluxLAN',imicon,'FluxLAN',menu=menu)
             icon.run()
