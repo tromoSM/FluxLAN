@@ -588,12 +588,14 @@ window.addEventListener('DOMContentLoaded',function(){
                 let name=document.createElement('p')
                 name.innerText=act.replaceAll('-',' ')
                 name.setAttribute('io','')
-                pop.appendChild(name)
+                let warning=document.createElement('p')
+                warning.setAttribute('warning','')
+                warning.innerText='Fluxlan is processing video in memory(ram) while recording. Long recordings may affect performance or fail on low memory systems'
+                pop.append(name,warning)
                 let start=document.createElement('button')
                 start.setAttribute('start','')
                 let ico=document.createElement('span')
                 ico.className='material-symbols-rounded'
-
                 function updateStatus(){
                 if(localStorage.getItem('recording')=='yes'){
                  start.innerText='Stop recording '
