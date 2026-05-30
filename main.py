@@ -4,13 +4,10 @@ import os
 import sys
 if sys.platform=='win32':
  from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
- from pystray import Icon,Menu,MenuItem
- from PIL import Image
 import ctypes
 import base64
 from datetime import datetime
 import subprocess
-import platformdirs
 import json
 import signal
 import numpy
@@ -30,6 +27,9 @@ from io import BytesIO
 import cryptography #keep ts
 import time
 import shutil
+from platformdirs import user_data_dir
+from pystray import Icon,Menu,MenuItem
+from PIL import Image
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -73,8 +73,11 @@ opener="open" if sys.platform == "darwin" else "xdg-open"
 FirstTime=False
 WelcomePageOpened=False
 ConsoleON=DEVELOPER_MODE
+ConsoleToggleFeature=not sys.platform.startswith('linux')
+OSsupport='unavailable'
+UnsupportedFeatures=''
 
-APPROOT=os.path.join(os.getenv("APPDATA"),"FluxLAN")
+APPROOT=user_data_dir(appauthor='tromoSM',appname='FluxLAN')
 VERSION_DATA=os.path.join(APPROOT,'version.version')
 
 SystemFolders=["Captures","Motion detected","FluxLAN"]
@@ -89,6 +92,16 @@ root = tk.Tk()
 root.withdraw()
 tk_q=queue.Queue()
 
+platform=sys.platform
+if platform=='win32':
+   OSsupport='Full compatibility'
+   UnsupportedFeatures='None'
+elif platform=='darwin':
+   OSsupport='Most features'
+   UnsupportedFeatures='network strength measuring, debug console(limited)'
+elif platform.startswith('linux'):
+   OSsupport='Core features'
+   UnsupportedFeatures='network strength measuring, debug console(toggle)'
 #Logging
 if DEVELOPER_MODE: #toggle this in production
  FlaskLog=logging.getLogger('werkzeug')
@@ -112,13 +125,23 @@ def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False):
    LogFunc(f'{" "*padding}{message}') 
 
 #TRAYICON
-kernel=ctypes.WinDLL('kernel32')
-user=ctypes.WinDLL('user32')
+if sys.platform=='win32':
+ kernel=ctypes.WinDLL('kernel32')
+ user=ctypes.WinDLL('user32')
 
 def refreshConsole():  
  # add sys windows and fallback
- if kernel.GetConsoleWindow():
-  user.ShowWindow(kernel.GetConsoleWindow(),5 if ConsoleON else 0)
+ if sys.platform=='win32':
+  if kernel.GetConsoleWindow():
+   user.ShowWindow(kernel.GetConsoleWindow(),5 if ConsoleON else 0)
+ elif sys.platform=='darwin':
+   try:
+    subprocess.Popen(
+       f"""osascript -e 'tell application "System Events" to set visible of process "Terminal" to {'true' if ConsoleON else 'false'}'""",
+       shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE
+    )
+   except Exception as er:
+      FluxLog(er,level='error')
 
 def ConsoleState(icon,item):
    global ConsoleON
@@ -143,14 +166,17 @@ def StartTray():
                         ),
                MenuItem('Link device',lambda it,ic:webbrowser.open(f'https://localhost:{MainPort}/dashboard?linkcam=true')),
                Menu.SEPARATOR,
-               MenuItem('Debug console',ConsoleState,checked=lambda item:ConsoleON),
+               MenuItem('Debug console',ConsoleState,checked=lambda item:ConsoleON,enabled=ConsoleToggleFeature),
                MenuItem('Advanced info',Menu(
                   MenuItem(f'local ip : {MainIP}',None,enabled=False),
                   MenuItem(f'running on : port {MainPort}',None,enabled=False),
                   MenuItem(f'appdata path : {APPROOT}',None,enabled=False),
                   Menu.SEPARATOR,
                   MenuItem(f'version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
-                  MenuItem(f'developer mode : {DEVELOPER_MODE}',None,enabled=False)
+                  MenuItem(f'developer mode : {DEVELOPER_MODE}',None,enabled=False),
+                  Menu.SEPARATOR,
+                  MenuItem(f'os compatibility : {OSsupport}',None,enabled=False),
+                  MenuItem(f'Unsupported features on {sys.platform}: {UnsupportedFeatures}',None,enabled=False)
                )),
                MenuItem('Support/Contact us',Menu(
                   MenuItem('Github',lambda it,ic:webbrowser.open_new_tab(APP_GITHUB)),
@@ -165,8 +191,14 @@ def StartTray():
             icon=Icon('FluxLAN',imicon,'FluxLAN',menu=menu)
             icon.run()
 #STARTUP 
-terminalsize=os.get_terminal_size()
-if(terminalsize.columns>=(107+len(APP_VERSION))):
+try:
+ terminalsize=os.get_terminal_size()
+ terminalwidth=terminalsize.columns
+except Exception as er:
+   terminalwidth=106
+   FluxLog(er,level='error')
+
+if(terminalwidth>=(107+len(APP_VERSION))):
  print(f"""
  &&&&&&&&&& &&&        &&&    &&&&  &&&&  &&&&  &&&&&&                 &&&&&&&&&        &&&&&&&&    &&&&& 
  &&&        &&&        &&&    &&&&   &&&&&&&&   &&&&&&                &&&&&&&&&&&      &&&&&&&&&&   &&&&& 
@@ -200,6 +232,8 @@ def refreshNetworkInfo():
         dBm=(signal//2)-100
         NetworkStrength={"signal":signal,"dBm":dBm}
         FluxLog(f"Refreshing network info : signal {signal} dBm {dBm}dBm ",level='info',CoverText=True,KeyValues=True)
+ else:
+   NetworkStrength={"signal":'unsupported os',"dBm":'only windows support this yet'}
 refreshNetworkInfo()
 
 def linkLookup():
@@ -262,10 +296,6 @@ if returnMovedVer()!=APP_VERSION:
  updatedir(os.path.join(meipasspath(),'templates'),os.path.join(APPROOT,'templates'))
  with open(VERSION_DATA,'w') as ver:
     ver.write(APP_VERSION)
-
-maindatadir=platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM')   
-
-os.makedirs(maindatadir,exist_ok=True)
 
 SOCKET=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 try:
@@ -406,7 +436,7 @@ def openF(fl):
 @main.route('/')
 def web():
  global Protocol
- if Protocol!='unavailable':
+ if Protocol=='unavailable':
   Protocol=request.scheme
 
  return render_template('index.html')
@@ -414,7 +444,7 @@ def web():
 @main.route('/dashboard')
 def admin():
    global Protocol,WelcomePageOpened
-   if Protocol!='unavailable':
+   if Protocol=='unavailable':
     Protocol=request.scheme
 
    if(request.remote_addr not in ['127.0.0.1','::1'] ) :
@@ -541,14 +571,14 @@ def record(data):
 def pref(com):
     FluxLog('System is using a beta function',level='error',CoverText=True)
     prefr=com.get("pref")
-    with open(os.path.normpath(os.path.join(platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM'),'preferences.json')),'r') as pref:
+    with open(os.path.normpath(os.path.join(APPROOT,'preferences.json')),'r') as pref:
      saved=json.load(pref)
     command=com.get('command')
     if command=='get':
         saved.get(prefr)
     elif command=='set':
       saved.append({str(prefr):str(com.get('value'))})
-      with open(os.path.normpath(os.path.join(platformdirs.user_data_dir(appname='FluxLAN',appauthor='tromoSM'),'preferences.json')),'w') as pref:
+      with open(os.path.normpath(os.path.join(APPROOT,'preferences.json')),'w') as pref:
        json.dump(saved,pref)
 
 @S.on('BatteryChange')
