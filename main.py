@@ -168,14 +168,14 @@ def StartTray():
                Menu.SEPARATOR,
                MenuItem('Debug console',ConsoleState,checked=lambda item:ConsoleON,enabled=ConsoleToggleFeature),
                MenuItem('Advanced info',Menu(
-                  MenuItem(f'local ip : {MainIP}',None,enabled=False),
-                  MenuItem(f'running on : port {MainPort}',None,enabled=False),
-                  MenuItem(f'appdata path : {APPROOT}',None,enabled=False),
+                  MenuItem(f'Local ip : {MainIP}',None,enabled=False),
+                  MenuItem(f'Running on : port {MainPort}',None,enabled=False),
+                  MenuItem(f'Appdata path : {APPROOT}',None,enabled=False),
                   Menu.SEPARATOR,
-                  MenuItem(f'version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
-                  MenuItem(f'developer mode : {DEVELOPER_MODE}',None,enabled=False),
+                  MenuItem(f'Version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
+                  MenuItem(f'Developer mode : {DEVELOPER_MODE}',None,enabled=False),
                   Menu.SEPARATOR,
-                  MenuItem(f'os compatibility : {OSsupport}',None,enabled=False),
+                  MenuItem(f'OS compatibility : {OSsupport}',None,enabled=False),
                   MenuItem(f'Unsupported features on {sys.platform}: {UnsupportedFeatures}',None,enabled=False)
                )),
                MenuItem('Support/Contact us',Menu(
@@ -389,7 +389,6 @@ def ini(dih):
     MAINUSERSDI[request.sid]=dih['clieUSR']
     curuser=MAINUSERSDI.get(request.sid,request.sid)
     joinev(curuser)
-    print(len(MAINUSERSDI))
 
 @S.on('disconnect')
 def left(reason):
