@@ -129,7 +129,7 @@ hvzoom{
     background-size: 500%;
     height: 50px;
 }
-popup[frame-rate] [warning]{
+popup[frame-rate] [warning],popup[start-recording] [warning]{
 width: 247px;
 }
 [warning],[social] p[openlink]{
@@ -138,6 +138,7 @@ width: 247px;
   margin: 0;
   color: #8f8f8f;
 }
+popup[start-recording] [warning]{font-size: 11px;}
 [stream=src]{
  transform: scale(1);
 }
