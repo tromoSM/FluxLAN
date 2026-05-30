@@ -1,5 +1,6 @@
 window.addEventListener('DOMContentLoaded',function(){
     const S=io()
+    dynamiclink=new URLSearchParams(window.location.search)
     let allcams=[]
     function sleep(dih){
         return new Promise(resolve=>setTimeout(resolve,dih))
@@ -182,6 +183,9 @@ window.addEventListener('DOMContentLoaded',function(){
             ic.className='material-symbols-rounded'
             ic.innerText=`${bt.split('|')[1].toUpperCase()}`
             a.appendChild(ic)
+         }
+         if(cleanname=='color-balance'||cleanname=='devices'||cleanname=='advanced'){
+            a.setAttribute('tab','')
          }
          a.setAttribute('tooltip',bt.replaceAll('$','').split('|')[0].replaceAll('1',''))
          flx.appendChild(a)
@@ -837,13 +841,15 @@ window.addEventListener('DOMContentLoaded',function(){
                  feedback.innerText='feedback or request features'
                  if(navigator.onLine){
                   //stackoverflow.com/a/79207042 @Yassir Hartani
-                  fetch(LINKLOOKUP).then(n=>
+                  try{
+                   fetch(LINKLOOKUP).then(n=>
                      n.json()).then(nf=>{
                        otherprojx.setAttribute('indicatorText',`${nf.pages.root.split('//')[1]}projects`)
                        otherprojx.setAttribute('openlink',`${nf.pages.root}?utm_source=fluxlan_inapp_projects_advanced#project`)
                        feedback.setAttribute('openlink',`${nf.pages.feedback}&utm_source=fluxlan_inapp_feedback_advanced`)
                        feedback.setAttribute('indicatorText',`${nf.pages.root.split('//')[1]}feedback-or-request-features`)
-                  })
+                   })}
+                   catch(er){console.error(er)}
                   }
                 else{
                     console.error('user offline')
@@ -893,6 +899,7 @@ window.addEventListener('DOMContentLoaded',function(){
                  <p>This information is used only to help improve compatibility, stability, and overall support across different platforms and releases.</p>
                  `
                  if(navigator.onLine){
+
                  await fetch(UPDATECHKROOT).then(inf=>inf.json()).then(info=>{
                     S.emit('INFO','pp',(privacypolicy)=>{
                         if(privacypolicy.version<info.legal.privacy_policy.version){
@@ -933,6 +940,7 @@ window.addEventListener('DOMContentLoaded',function(){
                  refreshTooltip()
                  refreshLinks()
                 chkupdate.addEventListener('click',async function(){
+                 try{
                  fetch(UPDATECHKROOT).then(n=>
                   n.json()).then(async app=>{
                     if(app.main.version_release>window.FluxLAN_version_release){
@@ -979,7 +987,9 @@ window.addEventListener('DOMContentLoaded',function(){
                         flexC.appendChild(p)
                     }
                   })
-                })
+                 }
+                 catch(e){console.error(e)}
+                 })
                 clearall.addEventListener('click',function(){
                     clearall.setAttribute('disabled','')
                     clearall.setAttribute('busy','')
@@ -1093,6 +1103,27 @@ window.addEventListener('DOMContentLoaded',function(){
     })
     }
     refreshTooltip()
+    if(dynamiclink.get('linkcam')=='true'){
+       if (document.querySelector('[action="link-camera"]')) {
+        document.querySelector('[action="link-camera"]').click()
+       }
+    }
+     if(dynamiclink.get('checkupdate')=='true'){
+     (async()=>{
+       await sleep(200)
+       if (document.querySelector('[action="advanced"]')) {
+        console.log('ayo')
+        document.querySelector('[action="advanced"]').click()
+        await sleep(250)
+        if(document.querySelector('flexrr[update] button')){
+        console.log('yo')
+        await sleep(100)
+        document.querySelector('flexrr[update] button').click()
+        }
+       }
+     })()
+     }
+
     S.on('adminBatteryChange',function(data){
         console.log(`user ${data.user} is at ${data.status}%`) 
         let battery=document.querySelector(`[stream][from="${data.user}"]`).closest('relborder').querySelector('hvpanel').querySelector('span[battery]')
