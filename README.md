@@ -8,7 +8,7 @@ Turn your old phones into a local camera network
  - [x] change frame rate
  - [x] color balancing
  - [x] selfie and rear cam
- - [ ] Grid when multiple cams
+ - [x] Grid when multiple cams
  - [x] Multiple streams
  - [x] Alert system
  - [x] Battery status
