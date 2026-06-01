@@ -129,6 +129,48 @@ window.addEventListener('DOMContentLoaded',function(){
             }
         })
     }
+    function refreshdragels(){
+        document.querySelectorAll('relborder').forEach(rel=>{
+            if(rel.hasAttribute('dragindexed')){
+                return
+            }
+            let savedmove=localStorage.getItem(`moved-${rel.querySelector('[stream]').getAttribute('c')}`)
+            if(savedmove){
+                rel.style.transform=`translate(${savedmove.split('$')[0]}px,${savedmove.split('$')[1]}px)`
+            }
+            let savedsize=localStorage.getItem(`size-${rel.querySelector('[stream]').getAttribute('c')}`)
+            if(savedsize){
+                rel.style.width=savedsize.split('$')[0]+'px'
+                rel.style.height=savedsize.split('$')[1]+'px'
+            }
+             rel.setAttribute('dragindexed','')
+             let x=0
+             let y=0
+             let startx,starty
+             rel.addEventListener('pointerdown',function(ev){
+                startx=ev.clientX-x
+                let clickloc=rel.getBoundingClientRect()
+                if(ev.clientX>clickloc.right-25&&ev.clientY>clickloc.bottom-25){
+                localStorage.setItem(`size-${rel.querySelector('[stream]').getAttribute('c')}`,`${clickloc.width}$${clickloc.height}`)
+                console.log(`size-${rel.querySelector('[stream]').getAttribute('c')}`,`${clickloc.width}$${clickloc.height}`)
+                return}
+                starty=ev.clientY-y
+                function move(ev){
+                    x=ev.clientX-startx
+                    y=ev.clientY-starty
+                    rel.style.transform=`translate(${x}px,${y}px)`
+                    localStorage.setItem(`moved-${rel.querySelector('[stream]').getAttribute('c')}`,`${x}$${y}`)
+                }
+                function rmev(){
+                    document.removeEventListener('pointermove',move)
+                    document.removeEventListener('pointerup',rmev)
+                }
+                document.addEventListener('pointermove',move)
+                document.addEventListener('pointerup',rmev)
+             })
+        })
+    }
+    refreshdragels()
     S.on('AdminNotification',function(data){
         notification({title:data.title,body:data.body,icon:data.icon,level:data.level,timeout:data.timeout})
     })
@@ -202,22 +244,19 @@ window.addEventListener('DOMContentLoaded',function(){
             document.querySelector('[action="start-recording"').querySelector('span').innerText='stop'
         }
     }
-
+    let stream1info=['0','0']
     S.on('Stream',function(stream){
+    refreshdragels()
         cammessage('hide')
-        if(stream.stream==1){
-        document.querySelectorAll(`[stream='src']`)[0].src=stream.rec
-        document.querySelectorAll(`[stream='src']`)[0].setAttribute('from',stream.camname)
-        document.querySelector(`[stream='src']`).style.transform=`rotate(${stream.ori}deg)` //change this to pref()
-        }
-        else{
-            if(!document.querySelectorAll(`[stream='src'][c='${stream.stream}']`)[0]){
+            if(!document.querySelectorAll(`[stream='src'][from='${stream.camname}']`)[0]){
                 let crStr=document.createElement('img')
                 crStr.setAttribute('stream','src')
                 crStr.setAttribute('c',stream.stream)
                 crStr.src=stream.rec
                 crStr.setAttribute('from',stream.camname)
                 let rel=document.createElement('relborder')
+                rel.width=crStr.naturalWidth
+                rel.height=crStr.naturalHeight
                 let strpanel=document.createElement('hvpanel')
                 let battery=document.createElement('span')
                 battery.setAttribute('battery','')
@@ -230,10 +269,16 @@ window.addEventListener('DOMContentLoaded',function(){
                 document.querySelector('cover').appendChild(rel)
             }
             else{
-                document.querySelectorAll(`[stream='src'][c='${stream.stream}']`)[0].src=stream.rec
-                document.querySelectorAll(`[stream='src'][c='${stream.stream}']`)[0].setAttribute('from',stream.camname)
+                let stream1=document.querySelectorAll(`[stream='src'][from="${stream.camname}"]`)[0]
+                stream1.src=stream.rec
+                stream1.setAttribute('from',stream.camname)
+                if(stream1.naturalWidth!=stream1info[0]||stream1.naturalHeight!=stream1info[1]){
+                    stream1.closest('relborder').width=stream1.naturalWidth
+                    stream1.closest('relborder').height=stream1.naturalHeight
+                    console.log('stream 1 dimensions changed')
+                    stream1info=[stream1.naturalWidth,stream1.naturalHeight]
+                }
             }
-        }
     })
 
     //actions
@@ -1057,13 +1102,10 @@ window.addEventListener('DOMContentLoaded',function(){
     S.on('adminLEAVE',function(user){
         notification({title:`${user} left`,body:`${user} has left fluxLAN.`,icon:'static/Assets/favicon.png',timeout:2})
         console.log(user)
-        document.querySelectorAll(`[stream='src'][from='${user}']`).forEach(all=>{
-            if(all.getAttribute('c')!=='0'){
-                all.remove()
-            }
-            else{
-                all.setAttribute('empty','')
-            }
+        document.querySelectorAll(`[stream='src'][from='${user}']`).forEach(async all=>{
+            all.setAttribute('empty','')
+            await sleep(200)
+            all.closest('relborder').remove()
         })
         if(allcams.length==0){
             cammessage('show')
@@ -1173,5 +1215,5 @@ window.addEventListener('DOMContentLoaded',function(){
         importb.innerText='Success'
    }
     })
-
+    
 })
