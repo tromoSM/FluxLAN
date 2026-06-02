@@ -44,10 +44,6 @@ APP_PRIVACY_POLICY_VERSION=2
 APP_GITHUB='https://github.com/tromoSM/FluxLAN'
 APP_PAGE_OTHR_PROJ="https://tromosm.github.io/tromoSM/t/?utm_source=flux_otherprojects_tray#project"
 
-main=Flask(__name__,template_folder=os.path.join("templates"),static_folder=os.path.join("static"))
-
-S=SocketIO(main,cors_allowed_origins="*",async_mode='threading')
-
 MAINUSERSDI={}
 ALLUSERS=[]
 RECORDED_DATA=[]
@@ -79,6 +75,10 @@ UnsupportedFeatures=''
 
 APPROOT=user_data_dir(appauthor='tromoSM',appname='FluxLAN')
 VERSION_DATA=os.path.join(APPROOT,'version.version')
+
+main=Flask(__name__,template_folder=os.path.join(APPROOT,"templates"),static_folder=os.path.join(APPROOT,"static"))
+
+S=SocketIO(main,cors_allowed_origins="*",async_mode='threading')
 
 SystemFolders=["Captures","Motion detected","FluxLAN"]
 AllowedExt=['jpg','mp4','log','png','fluxlan']
@@ -157,7 +157,7 @@ def CloseSelf(ver):
     os.kill(os.getpid(),signal.SIGINT)
 
 def StartTray():
-            imicon=Image.open(os.path.join('static','Assets','icon-w.ico'))
+            imicon=Image.open(os.path.join(APPROOT,'static','Assets','icon-w.ico'))
             menu=Menu(
                MenuItem(f'𝗙𝗹𝘂𝘅𝗟𝗔𝗡 - {APP_VERSION}',None,enabled=False),
                Menu.SEPARATOR,
@@ -548,7 +548,7 @@ def record(data):
            mainencd=cv2.VideoWriter_fourcc(*'mp4v')
            mainvid=cv2.VideoWriter(saved,mainencd,30,(recwidth,recheight))
            mainvid.write(firstfr)
-           mainlogo=cv2.imread(os.path.abspath('static/Assets/logo-w.png'),cv2.IMREAD_UNCHANGED)
+           mainlogo=cv2.imread(os.path.join(APPROOT,'static','Assets','logo-w.png'),cv2.IMREAD_UNCHANGED)
            h,w=mainlogo.shape[:2]
            logo=cv2.resize(mainlogo,(120,int(h*(120/w))),interpolation=cv2.INTER_AREA)
            for eachfrr in RECORDED_DATA[1:]:
