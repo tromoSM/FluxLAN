@@ -3,7 +3,7 @@ from flask_socketio import SocketIO,emit
 import os
 import sys
 if sys.platform=='win32':
- from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
+  from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
 import ctypes
 import base64
 from datetime import datetime
@@ -78,6 +78,15 @@ UnsupportedFeatures=''
 NetworkRefreshCount=0
 NetworkStrength=''
 
+try:
+ if not DEVELOPER_MODE:
+  if sys.platform=='win32':
+   kernel=ctypes.WinDLL('kernel32')
+   user=ctypes.WinDLL('user32')
+   if kernel.GetConsoleWindow():
+    user.ShowWindow(kernel.GetConsoleWindow(),0)
+except:
+   pass
 APPROOT=user_data_dir(appauthor='tromoSM',appname='FluxLAN')
 VERSION_DATA=os.path.join(APPROOT,'version.version')
 
