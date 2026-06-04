@@ -836,7 +836,7 @@ window.addEventListener('DOMContentLoaded',function(){
                  let ininfo=document.createElement('info')
                  ininfo.addEventListener('click',function(s){s.stopPropagation()})
                  
-                 let infotablayout={'Local IP':LOCALIP,"Running on ":`Port ${port}`,"Protocol":protocol,"Network strength":`${strength.signal}% (${strength.dBm}dBm)`,
+                 let infotablayout={'Local IP':LOCALIP,"Running on ":`Port ${port}`,"Protocol":protocol,"Network strength":`${strength.signal}${(strength.signal!='error'&&strength.signal!='ethernet')?'%':''} (${strength.dBm}dBm)`,
                 "Connected cameras": allcams.length
                 }
 
@@ -1121,16 +1121,21 @@ window.addEventListener('DOMContentLoaded',function(){
             document.querySelector('flpop[link-camera]').closest('f').remove()
         }
     })
-    document.querySelectorAll(`[stream='src']`)[0].addEventListener('load',function(){
+    if(document.querySelector(`[stream='src']`)){
+     document.querySelectorAll(`[stream='src']`)[0].addEventListener('load',function(){
         document.querySelectorAll(`[stream='src']`)[0].removeAttribute('empty')
         if(allcams.length==0){
             cammessage('show')
         }
-    })
-    document.querySelectorAll(`[stream='src']`)[0].addEventListener('error',function(){
+     })
+     document.querySelectorAll(`[stream='src']`)[0].addEventListener('error',function(){
         document.querySelectorAll(`[stream='src']`)[0].setAttribute('empty','')
         cammessage('show')
-    })
+     })
+    }
+    else{
+        cammessage('show')
+    }
     function refreshTooltip(){
     document.querySelectorAll('[tooltip]').forEach(yo=>{
         if(!yo.hasAttribute('tooltipset')){
