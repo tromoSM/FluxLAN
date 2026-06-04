@@ -30,6 +30,8 @@ import shutil
 from platformdirs import user_data_dir
 from pystray import Icon,Menu,MenuItem
 from PIL import Image
+from string import ascii_letters,digits
+from random import choices
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -43,6 +45,7 @@ APP_ANALYTICS_LTS='https://tromosm.github.io/tromoSM-analytics/analytics/fluxlan
 APP_PRIVACY_POLICY_VERSION=2
 APP_GITHUB='https://github.com/tromoSM/FluxLAN'
 APP_PAGE_OTHR_PROJ="https://tromosm.github.io/tromoSM/t/?utm_source=flux_otherprojects_tray#project"
+APP_REL_HASH='flxrelpre-09beta'
 
 MAINUSERSDI={}
 ALLUSERS=[]
@@ -61,7 +64,7 @@ MotionFrameSkip=0
 MotionFrameLS=None
 MainIP='unavailable'
 MainPort='84'
-Protocol=NetworkStrength='unavailable'
+Protocol='unavailable'
 CloseWhenBattery=0 #v1+. val will chng
 LastMotionDetected=0
 MotionCooldown=10
@@ -72,6 +75,8 @@ ConsoleON=DEVELOPER_MODE
 ConsoleToggleFeature=not sys.platform.startswith('linux')
 OSsupport='unavailable'
 UnsupportedFeatures=''
+NetworkRefreshCount=0
+NetworkStrength=''
 
 APPROOT=user_data_dir(appauthor='tromoSM',appname='FluxLAN')
 VERSION_DATA=os.path.join(APPROOT,'version.version')
@@ -103,15 +108,18 @@ elif platform.startswith('linux'):
    OSsupport='Core features'
    UnsupportedFeatures='network strength measuring, debug console(toggle)'
 #Logging
-if DEVELOPER_MODE: #toggle this in production
- FlaskLog=logging.getLogger('werkzeug')
- FlaskLog.level=logging.ERROR
+if DEVELOPER_MODE:
+ APP_REL_HASH=''.join(choices(ascii_letters+digits,k=10))
+ 
+#stackoverflow/a/2257449 Posted by Ignacio Vazquez-Abrams
+FlaskLog=logging.getLogger('werkzeug')
+FlaskLog.level=logging.ERROR
 
 FluxLanLog=logging.getLogger(__name__)
 logging.basicConfig(handlers=[RichHandler(rich_tracebacks=True,show_level=False,show_path=False,show_time=False,markup=True,highlighter=NullHighlighter())],format='%(message)s',level=logging.INFO)
 
 def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False):
-   colortable={'info':'bright_blue','error':'red',"high":'bright_red','debug':'magenta','warning':'yellow'}
+   colortable={'info':'bright_blue','error':'red',"high":'bright_red','debug':'magenta','warning':'yellow','dev':'bright_green'}
    if not CoverText and not KeyValues:
     message=f"[{colortable.get(level)}]|[/{colortable.get(level)}] {message}"
    elif not KeyValues:
@@ -119,7 +127,7 @@ def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False):
    if KeyValues:
       colored=message.split(':',1)
       message=f"[{colortable.get(level)}]| {colored[0]}:[/{colortable.get(level)}]{colored[1]}"
-   Loglevel={"info":FluxLanLog.info,"error":FluxLanLog.error,'high':FluxLanLog.info,'debug':FluxLanLog.debug,'warning':FluxLanLog.warning}
+   Loglevel={"info":FluxLanLog.info,"error":FluxLanLog.error,'high':FluxLanLog.info,'debug':FluxLanLog.debug,'warning':FluxLanLog.warning,'dev':FluxLanLog.warning}
    
    LogFunc=Loglevel.get(level)
    LogFunc(f'{" "*padding}{message}') 
@@ -220,20 +228,39 @@ else:
 
 if DEVELOPER_MODE:
    FluxLog('Running in developer mode',level='high')
+   FluxLog(f'Developer Mode: Using random REL_HASH. Will replace appdata everytime {'{'+APP_REL_HASH+'}'}',level='dev',KeyValues=True)
 
 def refreshNetworkInfo():
- global NetworkStrength
+ global NetworkStrength,NetworkRefreshCount
  if sys.platform=='win32':
   #stackoverflow/a/39463881
-  tempbytes=subprocess.check_output(["netsh","wlan","show","network","mode=Bssid"],text=True)
-  for line in tempbytes.split('\n'):
+  try:
+   NetworkStrength=''
+   tempbytes=subprocess.check_output(["netsh","wlan","show","network","mode=Bssid"],text=True)
+   for line in tempbytes.split('\n'):
      if "Signal" in line:
         signal=int(line.split(':')[1].strip().replace('%',''))
         dBm=(signal//2)-100
         NetworkStrength={"signal":signal,"dBm":dBm}
-        FluxLog(f"Refreshing network info : signal {signal} dBm {dBm}dBm ",level='info',CoverText=True,KeyValues=True)
+        break
+   if NetworkStrength=='':
+        connected=subprocess.check_output(["netsh","wlan","show","interfaces"],text=True,stderr=subprocess.DEVNULL)
+        if 'State'in connected and 'connected' in connected.lower():
+         NetworkStrength={"signal":'0%',"dBm":"N/A "}
+         FluxLog(f'NetworkStrength returned : {line}',level='error',KeyValues=True)
+        else:
+          FluxLog("Using Ethernet: can't refresh network strength",KeyValues=True)
+          NetworkStrength={'signal':'ethernet','dBm':'N/A '}
+
+  except Exception as ex:
+   FluxLog(f'Error in network info {ex}',level='error')
+   NetworkStrength={"signal":'error',"dBm":"N/A "}
  else:
+   FluxLog('Limited support : only windows support network strength measuring yet.',level='warning')
    NetworkStrength={"signal":'unsupported os',"dBm":'only windows support this yet'}
+ FluxLog(f"Refreshing network info {'(refreshed by advanced tab)'if NetworkRefreshCount!=0 else ''}: signal {NetworkStrength.get('signal')} dBm {NetworkStrength.get('dBm')}dBm ",level='info',CoverText=True,KeyValues=True)
+ NetworkRefreshCount+=1
+
 refreshNetworkInfo()
 
 def linkLookup():
@@ -290,12 +317,12 @@ def updatedir(new,old):
          FluxLog(f'Access is denied : {er}',level='error')
    shutil.copytree(new,old,dirs_exist_ok=True)
 
-if returnMovedVer()!=APP_VERSION:
- FluxLog(f'New version detected : {'{'}{returnMovedVer()} -> {APP_VERSION}{'}'} updating cached files.',KeyValues=True)
+if returnMovedVer()!=f'{APP_VERSION}${APP_REL_HASH}':
+ FluxLog(f'New version detected : {'{'}{returnMovedVer().split('$')[0]} -> {APP_VERSION}{' (devmode)'if returnMovedVer().split('$')[0]==APP_VERSION else ''}{'}'} updating cached files.',KeyValues=True)
  updatedir(os.path.join(meipasspath(),'static'),os.path.join(APPROOT,'static'))
  updatedir(os.path.join(meipasspath(),'templates'),os.path.join(APPROOT,'templates'))
  with open(VERSION_DATA,'w') as ver:
-    ver.write(APP_VERSION)
+    ver.write(f'{APP_VERSION}${APP_REL_HASH}')
 
 SOCKET=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 try:
@@ -648,6 +675,7 @@ def command(data):
 
 @S.on('refresh')
 def refresh(info):
+   global NetworkStrength
    if info=='NetworkInfo':
       refreshNetworkInfo()
       return {"strength":NetworkStrength}
