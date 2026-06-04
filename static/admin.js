@@ -1225,6 +1225,43 @@ window.addEventListener('DOMContentLoaded',function(){
                 }
             })
         }
-
+        else{
+                 let fullx=document.createElement('f')
+                 let infullx=document.createElement('flpop')
+                 infullx.setAttribute('closing','')
+                 infullx.setAttribute('disconnected','')
+                 let close=document.createElement('button')
+                 close.innerText='close'
+                 close.setAttribute('close','')
+                 close.className='material-symbols-rounded'
+                 close.addEventListener('click',async function(){
+                        infullx.setAttribute('closing','')
+                        await sleep(200)
+                        fullx.remove()
+                 })
+                 let icon=document.createElement('p')
+                 icon.innerHTML='<span class="material-symbols-rounded" camicon>power</span>'
+                 let title=document.createElement('h1')
+                 title.innerText='FluxLAN is closed'
+                 let description=document.createElement('p')
+                 description.innerText=`Didn't close FluxLan? try refreshing the page.`
+                 description.setAttribute('warning','')
+                 let flexc=document.createElement('flexc')
+                 flexc.append(title,description)
+                 infullx.append(icon,flexc,close)
+                 fullx.append(infullx)
+                document.body.append(fullx)
+                await sleep(200)
+                infullx.removeAttribute('closing')
+        }
+    })
+    S.on('connect', function(){
+        if(document.querySelector('[disconnected]')){
+            document.querySelectorAll('[disconnected]').forEach(async popup=>{
+                popup.setAttribute('closing','')
+                await sleep(200)
+                popup.remove()
+            })
+        }
     })
 })
