@@ -176,7 +176,8 @@ window.addEventListener('DOMContentLoaded',function(){
     })
     function saveimg(){
         if(allcams.length!=0){
-                   document.querySelectorAll('[stream]').forEach(str=>{
+                   document.querySelectorAll('[stream]').forEach(async str=>{
+                    str.closest('relborder').setAttribute('capturing','')
                     let maincanv=document.createElement('canvas')
                     let cavget=maincanv.getContext('2d')
                     maincanv.width=str.naturalWidth
@@ -192,6 +193,8 @@ window.addEventListener('DOMContentLoaded',function(){
                         notification({title:"Image saved",body:`Image saved to <span onclick="openDir('${path.dir}')" >${path.dir}/</span><span button='open' onclick="openS('${path.file}','Captures','jpg')">Open</span>`,timeout:3})
                     })
                     maincanv.toDataURL('image/jpeg')
+                    await sleep(200)
+                    str.closest('relborder').removeAttribute('capturing')
                     })
                 }
         else{
