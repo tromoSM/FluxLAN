@@ -1071,12 +1071,6 @@ window.addEventListener('DOMContentLoaded',function(){
                     S.on('closing',function(){
                         shutall.innerText='Closing FluxLAN'
                     })
-                    S.on('disconnect',async  function(){
-                        shutall.innerText='Closing FluxLAN'
-                        await sleep(500)
-                        shutall.removeAttribute('busy')
-                        shutall.innerText='FluxLAN is closed'
-                    })
                 })
                 importpref.addEventListener('click',async function(){
                     S.emit('importdata')
@@ -1220,5 +1214,17 @@ window.addEventListener('DOMContentLoaded',function(){
         importb.innerText='Success'
    }
     })
-    
+    S.on('disconnect',async function(){
+        if(document.querySelector('flexrr[cache] button[usureboutit]')){
+            document.querySelectorAll('flexrr[cache] button[usureboutit]').forEach(async usure=>{
+                if(usure.innerText=='Close FluxLAN'){
+                        usure.innerText='Closing FluxLAN'
+                        await sleep(500)
+                        usure.removeAttribute('busy')
+                        usure.innerText='FluxLAN is closed'
+                }
+            })
+        }
+
+    })
 })
