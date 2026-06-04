@@ -219,7 +219,7 @@ scrollable{display: flex;flex-direction: column;overflow-y: scroll;scrollbar-wid
 flpop{display: flex;z-index: 90;flex-direction: column;background-color: var(--backdrop-bg-nonres);width: 45%;min-height: fit-content; max-height: 85%;transition: 0.2s;position: relative;border-radius: 33px; backdrop-filter: blur(40px);-webkit-backdrop-filter: blur(40px);padding: 18px;box-sizing: border-box;}
 [logo]{height: 22px;padding-left: 10px;}
 flexR{display: flex;width: 100%;justify-content: center;transform: translateX(-87px);gap: 2px;z-index: +90;}
-relborder {display: block;position: relative;width: fit-content;height: fit-content;transition: 0.2s cubic-bezier(.79,.14,.15,.86);}
+relborder {display: block;position: relative;width: fit-content;height: fit-content;transition: 0.2s cubic-bezier(.79,.14,.15,.86) filter;}
 hvpanel{display: block;position: absolute;top: 10px;right: 10px;z-index: +99;color: white;font-size: 24px;text-shadow: 0px 0px 10px #00000054;transform: translateY(10px);opacity: 0;transition: 0.2s;}
 relborder:hover hvpanel{transform: translateY(0px);opacity: 1;}
 tooltip{max-width: 200px;box-shadow: 0px 2px 5px #0000003d;position: absolute;z-index: +9999;pointer-events: none;background-color: rgba(255, 255, 255, 0.705);backdrop-filter: blur(25px);-webkit-backdrop-filter: blur(25px);border-radius: 7px;font-size: 11px; color: #4e4e4e;padding: 1px 5px;animation: open-tool 0.3s ;transition: 0.2s;transform: translateY(0px)scale(1);opacity: 1;}
