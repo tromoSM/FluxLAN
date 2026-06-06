@@ -4,6 +4,16 @@ import os
 import sys
 if sys.platform=='win32':
   from windows_toasts import AudioSource, Toast, ToastAudio,WindowsToaster
+elif sys.platform=='darwin':
+   try:
+      from platform import mac_ver
+   except:
+      pass
+elif sys.platform.startswith=='linux':
+   try:
+      from platform import freedesktop_os_release
+   except:
+      pass
 import ctypes
 import base64
 from datetime import datetime
@@ -32,6 +42,7 @@ from pystray import Icon,Menu,MenuItem
 from PIL import Image
 from string import ascii_letters,digits
 from random import choices
+from platform import system,release
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -77,6 +88,7 @@ OSsupport='unavailable'
 UnsupportedFeatures=''
 NetworkRefreshCount=0
 NetworkStrength=''
+OS_version='unavailable'
 
 try:
  if not DEVELOPER_MODE:
@@ -116,6 +128,40 @@ elif platform=='darwin':
 elif platform.startswith('linux'):
    OSsupport='Core features'
    UnsupportedFeatures='network strength measuring, debug console(toggle)'
+
+#OS VERSION
+def OS_VERSION():
+ global OS_version
+ if platform=='win32':
+   winversion=sys.getwindowsversion()
+   WinName='unavailable'
+   oldwin={(5,1):"XP",(6.0):"Vista",(6,1):"7",(6,2):"8",(6,3):"8.1"}
+   if(winversion.major,winversion.minor) in oldwin:
+      WinName=f"Windows {oldwin.get((winversion.major,winversion.minor))}"
+   elif winversion.major==10:
+      if winversion.build<22000:
+         WinName='Windows 10'
+      else:
+         WinName='Windows 11'
+   OS_version=WinName
+ elif platform=='darwin':
+   try:
+      #stackoverflow/a/16981403 Posted by Abeltang
+      if mac_ver()[0]!='':
+         OS_version=mac_ver()[0]
+      else:
+         OS_version='mac_rel_failed' #couldnt find release
+   except:
+      OS_version='Darwin'
+      
+ elif platform.startswith('linux'):
+    try:
+       OS_version=freedesktop_os_release()["PRETTY_NAME"]    
+    except OSError:
+      OS_version='cant_read_rel'
+    except:
+      OS_version='Linux'
+
 #Logging
 if DEVELOPER_MODE:
  APP_REL_HASH=''.join(choices(ascii_letters+digits,k=10))
@@ -298,6 +344,8 @@ if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected")):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected"))
 
+if FirstTime:
+   OS_VERSION()
 if(DEVELOPER_MODE):
    FluxLog(f'Appdata folder : {APPROOT}',KeyValues=True)
 os.makedirs(APPROOT,exist_ok=True)
@@ -488,7 +536,7 @@ def admin():
       return 'sybau'
    if FirstTime:
     if not WelcomePageOpened:
-     webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={sys.platform}&o={MainPort}")
+     webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={OS_version}_{sys.platform}&o={MainPort}")
      WelcomePageOpened=True
    return render_template('tromoSM-admin.html')
 
