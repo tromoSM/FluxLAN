@@ -570,8 +570,8 @@ def openS(data):
  if sys.platform=='win32':
    try:
     subprocess.Popen([
-      "explorer",f"/select,{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))}"
-    ]) 
+      "explorer","/select,",f'{os.path.normpath(os.path.join(os.path.expanduser("~"),"Pictures","FluxLAN",folder,f"{path}.{fileExt}"))}'
+    ],stderr=subprocess.PIPE,stdout=subprocess.PIPE) 
    except Exception as err:
     FluxLog(f'Couldnt execute function : {err}',level='error',KeyValues=True)
  else: 
