@@ -59,6 +59,8 @@ dashboard{
     display: flex;
     align-items: center;
     transition: 0.2s;
+    position: fixed;
+    z-index: +999;
     padding: 10px 0px;
 }
 popup [io]{
