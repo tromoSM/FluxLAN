@@ -948,10 +948,10 @@ window.addEventListener('DOMContentLoaded',function(){
                  <p>This application shares limited technical information once during setup, including:</p>
                  <ul>
                   <li>Application version</li>
-                  <li>Operating system</li>
+                  <li>OS name and version</li>
                   <li>Application build information</li>
                  </ul>
-                 <p warning>example : v1.0(stable)-windows</p>
+                 <p warning>example : v1.0(stable) Windows 10_win32</p>
                  <p>This information is used only to help improve compatibility, stability, and overall support across different platforms and releases.</p>
                  `
                  if(navigator.onLine){
@@ -1268,3 +1268,4 @@ window.addEventListener('DOMContentLoaded',function(){
         }
     })
 })
+//debug let y=true;setInterval(()=>{if(y){let a=document.querySelector('notification').querySelectorAll('button');if(a){a.forEach(yo=>{if(yo.innerText.toLowerCase()=='open'){y=false;console.log(yo)}})}}},100)
