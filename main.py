@@ -64,6 +64,7 @@ RECORDED_DATA=[]
 
 DEVELOPER_MODE=True
 USETRAYICON=True
+ALLOWUNSAFEDASHBOARD=False 
 
 LASTFrame='__not-found__'
 orientation='up'
@@ -147,8 +148,8 @@ def OS_VERSION():
  elif platform=='darwin':
    try:
       #stackoverflow/a/16981403 Posted by Abeltang
-      if mac_ver()[0]!='':
-         OS_version=mac_ver()[0]
+      if mac_ver()[0]!='': # pyright: ignore[reportUndefinedVariable]
+         OS_version=mac_ver()[0] # pyright: ignore[reportUndefinedVariable]
       else:
          OS_version='mac_rel_failed' #couldnt find release
    except:
@@ -156,7 +157,7 @@ def OS_VERSION():
       
  elif platform.startswith('linux'):
     try:
-       OS_version=freedesktop_os_release()["PRETTY_NAME"]    
+       OS_version=freedesktop_os_release()["PRETTY_NAME"] # pyright: ignore[reportUndefinedVariable]  
     except OSError:
       OS_version='cant_read_rel'
     except:
@@ -212,6 +213,10 @@ def ConsoleState(icon,item):
    refreshConsole()
 refreshConsole()
 
+def AllowUnsafeDashboard(i,ic):
+   global ALLOWUNSAFEDASHBOARD
+   ALLOWUNSAFEDASHBOARD=not ALLOWUNSAFEDASHBOARD
+
 def CloseSelf(ver):
    if(ver=='verified'):
     FluxLog('Closing FluxLAN',level='high',CoverText=True)
@@ -230,17 +235,24 @@ def StartTray():
                MenuItem('Link device',lambda it,ic:webbrowser.open(f'https://localhost:{MainPort}/dashboard?linkcam=true')),
                Menu.SEPARATOR,
                MenuItem('Debug console',ConsoleState,checked=lambda item:ConsoleON,enabled=ConsoleToggleFeature),
-               MenuItem('Advanced info',Menu(
-                  MenuItem(f'Local ip : {MainIP}',None,enabled=False),
-                  MenuItem(f'Running on : port {MainPort}',None,enabled=False),
-                  MenuItem(f'Appdata path : {APPROOT}',None,enabled=False),
-                  Menu.SEPARATOR,
-                  MenuItem(f'Version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
-                  MenuItem(f'Developer mode : {DEVELOPER_MODE}',None,enabled=False),
-                  Menu.SEPARATOR,
-                  MenuItem(f'OS compatibility : {OSsupport}',None,enabled=False),
-                  MenuItem(f'Unsupported features on {sys.platform}: {UnsupportedFeatures}',None,enabled=False)
-               )),
+               MenuItem('Advanced',Menu(
+                  MenuItem('Advanced info',
+                     Menu(
+                     MenuItem(f'Local ip : {MainIP}',None,enabled=False),
+                     MenuItem(f'Running on : port {MainPort}',None,enabled=False),
+                     MenuItem(f'Appdata path : {APPROOT}',None,enabled=False),
+                     Menu.SEPARATOR,
+                     MenuItem(f'Version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
+                     MenuItem(f'Developer mode : {DEVELOPER_MODE}',None,enabled=False),
+                     Menu.SEPARATOR,
+                     MenuItem(f'OS compatibility : {OSsupport}',None,enabled=False),
+                     MenuItem(f'Unsupported features on {sys.platform}: {UnsupportedFeatures}',None,enabled=False)
+                  )),
+                  MenuItem('Developer options',Menu(
+                     MenuItem("Allow other devices to access dashboard",AllowUnsafeDashboard,checked=lambda item:ALLOWUNSAFEDASHBOARD)
+                  ))
+               ),
+                  ),
                MenuItem('Support/Contact us',Menu(
                   MenuItem('Github',lambda it,ic:webbrowser.open_new_tab(APP_GITHUB)),
                   MenuItem('Other projects from developer',lambda it,ic: webbrowser.open_new_tab(APP_PAGE_OTHR_PROJ)),
@@ -531,9 +543,11 @@ def admin():
     Protocol=request.scheme
 
    if(request.remote_addr not in ['127.0.0.1','::1'] ) :
+    if not ALLOWUNSAFEDASHBOARD:
       FluxLog(f'Dashboard is fobidden to IPs other than 127.0.0.1 or localhost. Use localhost:{MainPort} or 127.0.0.1:{MainPort} instead.',level='warning',CoverText=True)
       abort(403)
       return 'sybau'
+    
    if FirstTime:
     if not WelcomePageOpened:
      webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={OS_version}_{sys.platform}&o={MainPort}")
