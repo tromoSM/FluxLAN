@@ -1,12 +1,12 @@
 Flask
 Flask-SocketIO
 numpy
-opencv-python
 rich
 requests
 qrcode[pil]
 cryptography
 platformdirs
 pystray
+opencv-python
 Pillow
 windows-toasts; platform_system=="Windows"
