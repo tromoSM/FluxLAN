@@ -53,7 +53,7 @@ APP_BUILD='beta'
 APP_SUPPORT='https://tromosm.gt.tc/?feedback=true&utm_source=normal_fluxlan_console'
 APP_SUPPORT_LTS_FEEDBACK="https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=lts_fluxlan_console_n_tray"
 APP_ANALYTICS_LTS='https://tromosm.github.io/tromoSM-analytics/analytics/fluxlan'
-APP_PRIVACY_POLICY_VERSION=2
+APP_PRIVACY_POLICY_VERSION=3
 APP_GITHUB='https://github.com/tromoSM/FluxLAN'
 APP_PAGE_OTHR_PROJ="https://tromosm.github.io/tromoSM/t/?utm_source=flux_otherprojects_tray#project"
 APP_REL_HASH='flxrelpre-09beta'
@@ -454,7 +454,7 @@ def onerr(type,value,traceback):
 def mainroute(data):
    global LASTFrame,MotionFrameSkip
    if RecordingRunning:
-      if data.get("stream")==CurrentRecordStream:
+      if data.get("stream")==int(CurrentRecordStream):
          header,base=data.get('rec').split(',')
          RECORDED_DATA.append(base)
          
@@ -611,7 +611,7 @@ def record(data):
     elif data.get('command')=='stop':
         if RecordingRunning: 
            RecordingRunning=False
-           FluxLog('Stopping recording')
+           FluxLog(f'Stopping recording : {len(RECORDED_DATA)} frames found',KeyValues=True)
            AdminNotification(title='Processing recorded video',body='Recorded video is currently processing.',timeout=3)
            firstfr=None
            for eachfr in RECORDED_DATA:
@@ -635,6 +635,7 @@ def record(data):
            mainlogo=cv2.imread(os.path.join(APPROOT,'static','Assets','logo-w.png'),cv2.IMREAD_UNCHANGED)
            h,w=mainlogo.shape[:2]
            logo=cv2.resize(mainlogo,(120,int(h*(120/w))),interpolation=cv2.INTER_AREA)
+           writing=False
            for eachfrr in RECORDED_DATA[1:]:
              try:
               bytess=base64.b64decode(eachfrr)
@@ -644,10 +645,17 @@ def record(data):
                  blend=cv2.addWeighted(eachbyte[20:20+logo.shape[0],20:20+logo.shape[1]],0.8,logo[:,:,:3],0.2,0)
                  eachbyte[20:20+logo.shape[0],20:20+logo.shape[1]][logo[:,:,3]>0]=blend[logo[:,:,3]>0]
                  mainvid.write(eachbyte)
+                 if not writing:
+                    FluxLog('Writing recorded data to file')
+                    writing=True
+              else: 
+               FluxLog('recording data not found',level='error')
              except Exception as err:
                 FluxLog(err,level='warning')
                 pass
+           writing=False
            mainvid.release()
+           FluxLog(f'Recording saved to : {saved}',KeyValues=True)
            AdminNotification(title=f'Recording saved',body=f"""Recording saved to <span onclick="openDir('Captures')">Captures/</span><span button="open" onclick="openS('Recording {str(LASTrecStamp.date())}_{str(LASTrecStamp.time()).replace(':','-')}','Captures','mp4')">open</span>""",timeout='5')
 
 @S.on('hostpref') #dont use (to v1+)
