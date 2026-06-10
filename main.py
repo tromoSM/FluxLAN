@@ -174,7 +174,7 @@ FlaskLog.level=logging.ERROR
 FluxLanLog=logging.getLogger(__name__)
 logging.basicConfig(handlers=[RichHandler(rich_tracebacks=True,show_level=False,show_path=False,show_time=False,markup=True,highlighter=NullHighlighter())],format='%(message)s',level=logging.INFO)
 
-def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False):
+def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False,KeyValPadding=False):
    colortable={'info':'bright_blue','error':'red',"high":'bright_red','debug':'magenta','warning':'yellow','dev':'bright_green'}
    if not CoverText and not KeyValues:
     message=f"[{colortable.get(level)}]|[/{colortable.get(level)}] {message}"
@@ -183,6 +183,9 @@ def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False):
    if KeyValues:
       colored=message.split(':',1)
       message=f"[{colortable.get(level)}]| {colored[0]}:[/{colortable.get(level)}]{colored[1]}"
+   if KeyValPadding:
+      keyval=message.split(':',1)
+      message=f"{keyval[0]}\n{(" "*7)+keyval[1]}"
    Loglevel={"info":FluxLanLog.info,"error":FluxLanLog.error,'high':FluxLanLog.info,'debug':FluxLanLog.debug,'warning':FluxLanLog.warning,'dev':FluxLanLog.warning}
    
    LogFunc=Loglevel.get(level)
@@ -216,7 +219,7 @@ refreshConsole()
 def AllowUnsafeDashboard(i,ic):
    global ALLOWUNSAFEDASHBOARD
    ALLOWUNSAFEDASHBOARD=not ALLOWUNSAFEDASHBOARD
-
+      
 def CloseSelf(ver):
    if(ver=='verified'):
     FluxLog('Closing FluxLAN',level='high',CoverText=True)
@@ -545,9 +548,9 @@ def admin():
    if(request.remote_addr not in ['127.0.0.1','::1'] ) :
     if not ALLOWUNSAFEDASHBOARD:
       FluxLog(f'Dashboard is fobidden to IPs other than 127.0.0.1 or localhost. Use localhost:{MainPort} or 127.0.0.1:{MainPort} instead.',level='warning',CoverText=True)
+      FluxLog('To access the dashboard from other devices, Go to : System tray -> advanced -> developer options -> Allow other devices to access to dashboard.',level='warning',KeyValues=True,KeyValPadding=True)
       abort(403)
       return 'sybau'
-    
    if FirstTime:
     if not WelcomePageOpened:
      webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={OS_version}_{sys.platform}&o={MainPort}")
