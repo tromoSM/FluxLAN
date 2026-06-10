@@ -23,6 +23,7 @@ popup{
 [openlink]{position: relative;}
 notification,popup{
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 popup input[type=range]{accent-color: #5249499c;}
 
@@ -255,8 +256,8 @@ button[start]{padding: 3px 7px;box-sizing: border-box;margin-top: 10px !importan
 flpop[privacy] h1,[disconnected] h1{font-size: 25px;font-weight: 818;margin: 0;margin-bottom: 12px;}
 flpop[privacy] p:not([warning]){padding: 0;margin: 0;font-size: 14px;color: #575555;}  
 flpop[privacy]{box-shadow: 0px 6px 10px #00000029;}
-flpop[privacy] [close],[disconnected] [close]{width: 24px;height: 24px;transition: 0.1s; position: absolute;top: 0;right: 0;border-radius: 50px;border: none;font-size: 17px;display: flex;align-items: center;justify-content: center;margin: 14px;padding: 4px;box-sizing: content-box;cursor: pointer;  background: #00000026;color: white;}
-flpop[privacy] [close]:hover,[disconnected] [close]:hover{transform: rotate(180deg);}
+flpop[privacy] [close],[disconnected] [close],flpop[link-camera] [close]{width: 24px;height: 24px;transition: 0.1s; position: absolute;top: 0;right: 0;border-radius: 50px;border: none;font-size: 17px;display: flex;align-items: center;justify-content: center;margin: 14px;padding: 4px;box-sizing: content-box;cursor: pointer;  background: #00000026;color: white;}
+flpop[privacy] [close]:hover,[disconnected] [close]:hover,flpop[link-camera] [close]:hover{transform: rotate(180deg);}
 [tooltip="open privacy statement"]{cursor: pointer;}
 [nonusrpageinner]{pointer-events: all;  background: #0000003d;color: white;border: none;border-radius: 50px;padding: 5px 10px;cursor: pointer;}
 [camicon]{  font-size: 66px;color: #c2c2c2;}
@@ -272,3 +273,6 @@ relborder{overflow:auto;resize: both;scrollbar-width: none;border-radius: 10px;}
 @keyframes disconnect{from{transform: translate(0px);}to{transform: translate(10px,45px) rotate(-30deg);}}
 @keyframes powercab {from{transform: translateY(12px) rotate(22deg);}to{transform: translateY(0px) rotate(30deg);}}
 [capturing]{filter: brightness(0.28) contrast(1.8) !important;}
+[stream]{animation: open-str 0.3s;}
+@keyframes open-str{from{filter: blur(50px) brightness(100);transform: scale(0);}to{filter: none;transform: scale(1);}}
+@media (max-width:901px){flpop{width: 90%;height: 70%;}}
