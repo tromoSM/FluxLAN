@@ -9,7 +9,7 @@ elif sys.platform=='darwin':
       from platform import mac_ver
    except:
       pass
-elif sys.platform.startswith=='linux':
+elif sys.platform.startswith('linux'):
    try:
       from platform import freedesktop_os_release
    except:
@@ -270,6 +270,7 @@ def StartTray():
             icon.run()
 #STARTUP 
 try:
+
  terminalsize=os.get_terminal_size()
  terminalwidth=terminalsize.columns
 except Exception as er:
@@ -390,7 +391,10 @@ def updatedir(new,old):
    shutil.copytree(new,old,dirs_exist_ok=True)
 
 if returnMovedVer()!=f'{APP_VERSION}${APP_REL_HASH}':
- FluxLog(f'New version detected : {'{'}{returnMovedVer().split('$')[0]} -> {APP_VERSION}{' (devmode)'if returnMovedVer().split('$')[0]==APP_VERSION else ''}{'}'} updating cached files.',KeyValues=True)
+ if(returnMovedVer() is not None):
+  FluxLog(f'New version detected : {'{'}{returnMovedVer().split('$')[0]} -> {APP_VERSION}{' (devmode)'if returnMovedVer().split('$')[0]==APP_VERSION else ''}{'}'} updating cached files.',KeyValues=True)
+ else:
+    FluxLog('New installation detected. Caching files')
  updatedir(os.path.join(meipasspath(),'static'),os.path.join(APPROOT,'static'))
  updatedir(os.path.join(meipasspath(),'templates'),os.path.join(APPROOT,'templates'))
  with open(VERSION_DATA,'w') as ver:
@@ -714,7 +718,7 @@ def close(ver):
 def MotionDetect():
       global MotionFrameLS,MotionDetecting,LASTFrame
       if MotionDetecting:
-            if LASTFrame=="__not-found__":
+            if LASTFrame=="__not-found__" or not LASTFrame.get('rec'):
                return
             header,base=LASTFrame.get('rec').split(',')
             temparr=numpy.frombuffer(base64.b64decode(base),numpy.uint8)
