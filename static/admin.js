@@ -32,6 +32,7 @@ window.addEventListener('DOMContentLoaded',function(){
         protocol=app.protocol
         strength=app.strength
     })
+    let fromcammessage=false
     function cammessage(a){
         let full=document.createElement('f')
         full.setAttribute('nonrec','')
@@ -42,6 +43,7 @@ window.addEventListener('DOMContentLoaded',function(){
         link.innerText='Link device'
         link.setAttribute('nonusrpageinner','')
         link.addEventListener('click',function(s){
+            fromcammessage=true
             s.stopPropagation()
             if(document.querySelector('[action="link-camera"]')){
                 document.querySelector('[action="link-camera"]').click()
@@ -778,14 +780,27 @@ window.addEventListener('DOMContentLoaded',function(){
                    let safarifix=document.createElement('p')
                    safarifix.setAttribute('warning','')
                    safarifix.innerText='Safari on iOS might behave different than other browsers. If Safari loops between the warning and app page, restart Safari.'
+                   let close=document.createElement('button')
+                   close.innerText='close'
+                   close.setAttribute('close','')
+                   close.className='material-symbols-rounded'
+                   close.addEventListener('click',async function(){
+                        infull.setAttribute('closing','')
+                        await sleep(200)
+                        full.remove()
+                   })
                    flexc.append(title,desc,sidetitle,descc,safari,safarifix)
                    infull.append(im,flexc)
+                   if(fromcammessage){
+                    infull.append(close)
+                   }
                    full.append(infull)
                    document.body.append(full)
                    refreshLinks()
                    refreshTooltip()
                    await sleep(200)
                    infull.removeAttribute('closing','')
+                   fromcammessage=false
                 })
              } 
             }
@@ -1268,3 +1283,4 @@ window.addEventListener('DOMContentLoaded',function(){
         }
     })
 })
+//debug let y=true;setInterval(()=>{if(y){let a=document.querySelector('notification').querySelectorAll('button');if(a){a.forEach(yo=>{if(yo.innerText.toLowerCase()=='open'){y=false;console.log(yo)}})}}},100)
