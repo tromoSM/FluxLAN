@@ -701,12 +701,12 @@ window.addEventListener('DOMContentLoaded',function(){
                     S.emit('INFO','ifRecRunning',(st)=>{
                         recstate=st.running
                         if(recstate=='False'){
-                            S.emit('Record',{command:"start",stream:0})
+                            S.emit('Record',{command:"start",stream:localStorage.getItem('last$$stream')})
                             //add notification
                             localStorage.setItem('recording','yes')
                          }
                          else{
-                            S.emit('Record',{command:"stop",stream:0})
+                            S.emit('Record',{command:"stop",stream:localStorage.getItem('last$$stream')})
                             localStorage.setItem('recording','no')
                         }
                 updateStatus()
@@ -1268,4 +1268,3 @@ window.addEventListener('DOMContentLoaded',function(){
         }
     })
 })
-//debug let y=true;setInterval(()=>{if(y){let a=document.querySelector('notification').querySelectorAll('button');if(a){a.forEach(yo=>{if(yo.innerText.toLowerCase()=='open'){y=false;console.log(yo)}})}}},100)
