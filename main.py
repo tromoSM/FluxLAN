@@ -1,3 +1,5 @@
+APP_RELEASE_TYPE='LITE'#lite or perf
+
 from flask import Flask,request,render_template,abort
 from flask_socketio import SocketIO,emit
 import os
@@ -43,6 +45,8 @@ from PIL import Image
 from string import ascii_letters,digits
 from random import choices
 from platform import system,release
+if APP_RELEASE_TYPE=='PERF':
+   from webview import create_window,start,settings,FileDialog,OPEN_DIALOG,SAVE_DIALOG
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -106,6 +110,9 @@ VERSION_DATA=os.path.join(APPROOT,'version.version')
 main=Flask(__name__,template_folder=os.path.join(APPROOT,"templates"),static_folder=os.path.join(APPROOT,"static"))
 
 S=SocketIO(main,cors_allowed_origins="*",async_mode='threading')
+
+if APP_RELEASE_TYPE=="PERF":
+       MainWindow=create_window(url=f"https://localhost:{MainPort}/dashboard",resizable=True,text_select=True,title='FluxLAN')
 
 SystemFolders=["Captures","Motion detected","FluxLAN"]
 AllowedExt=['jpg','mp4','log','png','fluxlan']
@@ -359,6 +366,8 @@ if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',
 
 if not os.path.exists(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected")):
     os.makedirs(os.path.join(os.path.expanduser("~"),'Pictures','FluxLAN',"Motion detected"))
+
+os.makedirs(os.path.join(APPROOT,'prefr'),exist_ok=True)
 
 if FirstTime:
    OS_VERSION()
@@ -790,19 +799,35 @@ def export(jsond):
    jsondata.update(additionalinfo)
    def saveExport():
     FluxLog('Opening file dialog to choose saving path')
-    root.lift()
-    root.attributes('-topmost',True)
+    if APP_RELEASE_TYPE!='PERF':
+     root.lift()
+     root.attributes('-topmost',True)
     accepted=[('FluxLan backup files','*.fluxlan*')]
-    saved=filedialog.asksaveasfile(filetypes=accepted,defaultextension='.fluxlan',title='Save export/backup file',initialfile=f"FluxLAN backup {datetimeX.date()}")
-    root.update()
-    root.withdraw()
+    webviewaccepted=("FluxLan backup files (*.fluxlan)",)
+    if APP_RELEASE_TYPE=="PERF":
+      FluxLog('Using webview file dialog',CoverText=True)
+      saved=MainWindow.create_file_dialog(
+         FileDialog.SAVE,save_filename=f"FluxLAN backup {datetimeX.date()}",file_types=webviewaccepted
+      )   
+    else:
+     saved=filedialog.asksaveasfile(filetypes=accepted,defaultextension='.fluxlan',title='Save export/backup file',initialfile=f"FluxLAN backup {datetimeX.date()}")
+     root.update()
+     root.withdraw()
     FluxLog('Closing file dialog')
     if saved:
        FluxLog('Saving export file')
-       json.dump(jsondata,saved)
-       saved.close()
+       if APP_RELEASE_TYPE!='PERF':
+        json.dump(jsondata,saved)
+        saved.close()
+       else:
+          with open(saved[0],"w") as export:
+             json.dump(jsondata,export)
+          
    print('\n')
-   tk_q.put(saveExport)
+   if APP_RELEASE_TYPE!='PERF':
+    tk_q.put(saveExport)
+   else:
+      saveExport()
 
 if not DEVELOPER_MODE:
  FluxLog('Opening dashboard')    
@@ -815,21 +840,36 @@ def importpref():
  FluxLog('Importing backup/export file')
  def openImport():
   FluxLog('Opening file dialog to choose what file import from')
-  root.lift()
-  root.attributes('-topmost',True)
   accepted=[('FluxLan backup files','*.fluxlan*')]
-  imported=filedialog.askopenfilename(filetypes=accepted,title='Import export/backup file',defaultextension='.fluxlan')
-  root.update()
-  root.withdraw()
+  webviewaccepted=("FluxLan backup files (*.fluxlan)",)
+  if APP_RELEASE_TYPE!='PERF':
+   root.lift()
+   root.attributes('-topmost',True)
+   imported=filedialog.askopenfilename(filetypes=accepted,title='Import export/backup file',defaultextension='.fluxlan')
+   root.update()
+   root.withdraw()
+  else:
+     imported=MainWindow.create_file_dialog(
+        FileDialog.OPEN,file_types=webviewaccepted
+     )
   FluxLog('Closing file dialog')
   if imported:
      FluxLog('Reading exported data')
-     with open(imported,'r') as backup:
+     if APP_RELEASE_TYPE!="PERF":
+      with open(imported,'r') as backup:
         backupd=json.load(backup)
         S.emit('recieveImport',backupd)
-        FluxLog('Applying backup to current system')
+     else:
+        with open(imported[0],'r') as backup:
+         backupd=json.load(backup)
+         S.emit('recieveImport',backupd)
+     FluxLog('Applying backup to current system')
  print('\n')
- tk_q.put(openImport) 
+ if APP_RELEASE_TYPE!='PERF':
+  tk_q.put(openImport) 
+ else:
+    openImport()
+
 
 sys.excepthook=onerr   
 
@@ -846,10 +886,15 @@ def change(status):
 
 if(__name__=="__main__"):
     MainServeThread=threading.Thread(
-       target=lambda:S.run(main,debug=True,host='0.0.0.0',port=MainPort,ssl_context='adhoc',use_reloader=False),
+       target=lambda:S.run(main,debug=DEVELOPER_MODE,host='0.0.0.0',port=MainPort,ssl_context='adhoc',use_reloader=False),
        daemon=True)
+
     if USETRAYICON:
         threading.Thread(target=StartTray,daemon=True).start()
     MainServeThread.start()
+    if APP_RELEASE_TYPE=="PERF":
+       settings["IGNORE_SSL_ERRORS"]=True
+       start(private_mode=False,storage_path=os.path.join(APPROOT,"prefr"),debug=DEVELOPER_MODE)
+
     root.after(10,tk_qu)
     root.mainloop()
