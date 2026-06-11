@@ -5,6 +5,14 @@ window.addEventListener('DOMContentLoaded',function(){
     function sleep(dih){
         return new Promise(resolve=>setTimeout(resolve,dih))
     }
+     lottie.loadAnimation({
+            container:document.querySelector('loading'),
+            renderer:"svg",
+            loop:true,
+            autoplay:true,
+            path:"/static/Assets/loader.json"
+     })
+     let startup=performance.now()
     S.on('CAMlist',function(all){
         allcams=all
     })
@@ -249,6 +257,22 @@ window.addEventListener('DOMContentLoaded',function(){
             document.querySelector('[action="start-recording"').querySelector('span').innerText='stop'
         }
     }
+    startupfinish=performance.now();
+    (async()=>{
+      if(startupfinish-startup>1000){
+        document.querySelector('loading').setAttribute('closing','')
+        await sleep(300)
+        document.querySelector('loading').remove()
+      }
+      else{
+        await sleep(1000-(startupfinish-startup))
+        document.querySelector('loading').setAttribute('closing','')
+        await sleep(300)
+        document.querySelector('loading').remove()
+      }
+      console.log(`Dashboard startup took : ${(startupfinish-startup)/1000}s`)
+    })()
+
     let stream1info=['0','0']
     S.on('Stream',function(stream){
     refreshdragels()
@@ -1293,4 +1317,3 @@ window.addEventListener('DOMContentLoaded',function(){
         }
     })
 })
-//debug let y=true;setInterval(()=>{if(y){let a=document.querySelector('notification').querySelectorAll('button');if(a){a.forEach(yo=>{if(yo.innerText.toLowerCase()=='open'){y=false;console.log(yo)}})}}},100)
