@@ -315,6 +315,11 @@ window.addEventListener('DOMContentLoaded',function(){
                 ac.setAttribute('tooltip','show ribbon')
                 dash.setAttribute(`visible`,'no')
                 ac.setAttribute('float','float')
+                document.querySelectorAll('relborder').forEach(stream=>{
+                    stream.style.height=`calc(${window.getComputedStyle(stream).height} + 52px)`
+                    let currenttra=(localStorage.getItem("moved-"+stream.querySelector('[stream]').getAttribute('c'))).split('$')
+                    stream.style.transform=`translate(${currenttra[0]}px,${currenttra[1]-52}px)`
+                })
                 if(document.querySelector('popup')){
                     document.querySelector('popup').setAttribute('closing','')
                     await sleep(300)
@@ -326,6 +331,11 @@ window.addEventListener('DOMContentLoaded',function(){
                 dash.setAttribute(`visible`,'yuh')
                 ac.setAttribute('tooltip','hide ribbon')
                 ac.setAttribute('float','no')
+                document.querySelectorAll('relborder').forEach(stream=>{
+                    stream.style.height=`calc(${window.getComputedStyle(stream).height} - 52px)`
+                    let currenttra=(localStorage.getItem("moved-"+stream.querySelector('[stream]').getAttribute('c'))).split('$')
+                    stream.style.transform=`translate(${currenttra[0]}px,${currenttra[1]}px)`
+                })
                }
             }
             else if(act=='color-balance'){
