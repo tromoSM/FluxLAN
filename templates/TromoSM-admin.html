@@ -2,6 +2,7 @@
 <html>
     <head>
      <script src="{{url_for('static',filename='socket.io.min.js')}}"></script>
+     <script src="{{url_for('static',filename='lottie.min.js')}}"></script>
      <script src="{{url_for('static',filename='admin.js')}}"></script>
      <link rel="stylesheet" href="{{url_for('static',filename='main.css')}}">
      <link rel="icon" href="{{url_for('static',filename='Assets/favicon.png')}}" type="image/x-icon" media="(prefers-color-scheme: light)">
@@ -11,6 +12,7 @@
     </head>
     <full>
     <dashboard visible="yuh"><img logo alt="FluxLAN" src="{{url_for('static',filename='Assets/logo.png')}}"></dashboard>
-    <cover><relborder><hvpanel><span class="material-symbols-rounded" battery></span></hvpanel><img src="" c="0" stream="src" alt="stream" admin></relborder></cover>
+    <cover></cover>
     </full>
+    <loading></loading>
 </html>
