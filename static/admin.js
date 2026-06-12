@@ -1,10 +1,12 @@
+function sleep(dih){
+        return new Promise(resolve=>setTimeout(resolve,dih))
+}
+
 window.addEventListener('DOMContentLoaded',function(){
     const S=io()
     dynamiclink=new URLSearchParams(window.location.search)
     let allcams=[]
-    function sleep(dih){
-        return new Promise(resolve=>setTimeout(resolve,dih))
-    }
+
      lottie.loadAnimation({
             container:document.querySelector('loading'),
             renderer:"svg",
@@ -261,13 +263,17 @@ window.addEventListener('DOMContentLoaded',function(){
     (async()=>{
       if(startupfinish-startup>1000){
         document.querySelector('loading').setAttribute('closing','')
+        document.querySelector('webview-loading')?.setAttribute('closing','')
         await sleep(300)
         document.querySelector('loading').remove()
+        document.querySelector('webview-loading')?.remove()
       }
       else{
         await sleep(1000-(startupfinish-startup))
+        document.querySelector('webview-loading')?.setAttribute('closing','')
         document.querySelector('loading').setAttribute('closing','')
         await sleep(300)
+        document.querySelector('webview-loading')?.remove()
         document.querySelector('loading').remove()
       }
       console.log(`Dashboard startup took : ${(startupfinish-startup)/1000}s`)
