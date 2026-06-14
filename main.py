@@ -112,7 +112,7 @@ main=Flask(__name__,template_folder=os.path.join(APPROOT,"templates"),static_fol
 S=SocketIO(main,cors_allowed_origins="*",async_mode='threading')
 
 if APP_RELEASE_TYPE=="PERF":
-       MainWindow=create_window(url=f"https://localhost:{MainPort}/dashboard",resizable=True,text_select=True,title='FluxLAN')
+       MainWindow=create_window(url=f"https://localhost:{MainPort}/dashboard",resizable=True,text_select=True,title='FluxLAN',min_size=(705,443))
 
 SystemFolders=["Captures","Motion detected","FluxLAN"]
 AllowedExt=['jpg','mp4','log','png','fluxlan']
@@ -530,7 +530,7 @@ def ask(q):
       return {'running': str(RecordingRunning)}
    elif q=='about':
       refreshNetworkInfo()
-      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD,"ip":MainIP,'port':MainPort,'protocol':Protocol,"strength":NetworkStrength}
+      return {'date':APP_DATE,'updatechk_root':APP_UPDATECHK_ROOT,'version':APP_VERSION,'version_release':str(APP_VERSION_RELEASE),'link_lookup':APP_LINK_LOOKUP,'build':APP_BUILD,"ip":MainIP,'port':MainPort,'protocol':Protocol,"strength":NetworkStrength,"release_type":"performance" if APP_RELEASE_TYPE=='PERF' else "lite"}
    elif q=='qr':
       return {"qr": MainQR,"link":f"https://{MainIP}:{MainPort}"}
    elif q=='pp':
@@ -560,10 +560,14 @@ def admin():
 
    if(request.remote_addr not in ['127.0.0.1','::1'] ) :
     if not ALLOWUNSAFEDASHBOARD:
+      FluxLog(f'{request.remote_addr} is trying to access the dashboard.',level='warning',CoverText=True)
       FluxLog(f'Dashboard is fobidden to IPs other than 127.0.0.1 or localhost. Use localhost:{MainPort} or 127.0.0.1:{MainPort} instead.',level='warning',CoverText=True)
       FluxLog('To access the dashboard from other devices, Go to : System tray -> advanced -> developer options -> Allow other devices to access to dashboard.',level='warning',KeyValues=True,KeyValPadding=True)
       abort(403)
       return 'sybau'
+    else:
+      FluxLog(f'DEV : Dashboard is being accessed by {request.remote_addr}',level='dev',KeyValues=True)
+
    if FirstTime:
     if not WelcomePageOpened:
      webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={OS_version}_{sys.platform}&o={MainPort}")
@@ -894,7 +898,12 @@ if(__name__=="__main__"):
     MainServeThread.start()
     if APP_RELEASE_TYPE=="PERF":
        settings["IGNORE_SSL_ERRORS"]=True
-       start(private_mode=False,storage_path=os.path.join(APPROOT,"prefr"),debug=DEVELOPER_MODE)
+       def webclose():
+          CloseSelf('verified')
+       def webidentify():
+        MainWindow.evaluate_js('window.USING_WEBVIEW=true',callback=None)
+       MainWindow.events.closing+=webclose
+       start(webidentify,private_mode=False,storage_path=os.path.join(APPROOT,"prefr"),debug=DEVELOPER_MODE)
 
     root.after(10,tk_qu)
     root.mainloop()
