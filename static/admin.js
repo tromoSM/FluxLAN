@@ -1011,7 +1011,7 @@ window.addEventListener('DOMContentLoaded',function(){
                   <li>OS name and version</li>
                   <li>Application build information</li>
                  </ul>
-                 <p warning>example : v1.0(stable) Windows 10_win32</p>
+                 <p warning>example : v1.0(stable/lite) Windows 10_win32</p>
                  <p>This information is used only to help improve compatibility, stability, and overall support across different platforms and releases.</p>
                  `
                  if(navigator.onLine){
