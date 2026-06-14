@@ -41,6 +41,7 @@ window.addEventListener('DOMContentLoaded',function(){
         port=app.port
         protocol=app.protocol
         strength=app.strength
+        window.FluxLAN_release_type=app.release_type
     })
     let fromcammessage=false
     function cammessage(a){
@@ -869,7 +870,11 @@ window.addEventListener('DOMContentLoaded',function(){
                  let infobar=document.createElement('p')
                  infobar.setAttribute('warning','')
                  if(UPDATECHKROOT!=''){
-                    infobar.innerText=`${window.FluxLAN_version} ${window.FluxLAN_release_date} (${window.FluxLAN_build})`
+                    let reltype=''
+                    if(window.FluxLAN_release_type){
+                        reltype=`/${window.FluxLAN_release_type}`
+                    }
+                    infobar.innerText=`${window.FluxLAN_version} ${window.FluxLAN_release_date} (${window.FluxLAN_build}${reltype})`
                  }
                  else{window.location.reload()}
                  let flexxr=document.createElement('flexrr')
@@ -1061,7 +1066,12 @@ window.addEventListener('DOMContentLoaded',function(){
                             chkupdate.innerText='Downloading'
                             chkupdate.setAttribute('disabled','')
                             let tempdown=document.createElement('a')
-                            tempdown.href=app.update.update_url
+                            if(window.FluxLAN_release_type=='performance'){
+                             tempdown.href=app.update.update_url.performance
+                            }
+                            else if(window.FluxLAN_release_type=='lite'){
+                             tempdown.href=app.update.update_url.lite
+                            }
                             tempdown.style.display='none'
                             document.body.appendChild(tempdown)
                             tempdown.click()
