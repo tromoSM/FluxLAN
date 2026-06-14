@@ -46,7 +46,7 @@ from string import ascii_letters,digits
 from random import choices
 from platform import system,release
 if APP_RELEASE_TYPE=='PERF':
-   from webview import create_window,start,settings,FileDialog,OPEN_DIALOG,SAVE_DIALOG
+   from webview import create_window,start,settings,FileDialog,errors
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -112,7 +112,7 @@ main=Flask(__name__,template_folder=os.path.join(APPROOT,"templates"),static_fol
 S=SocketIO(main,cors_allowed_origins="*",async_mode='threading')
 
 if APP_RELEASE_TYPE=="PERF":
-       MainWindow=create_window(url=f"https://localhost:{MainPort}/dashboard",resizable=True,text_select=True,title='FluxLAN',min_size=(705,443))
+       MainWindow=create_window(url=f"https://localhost:{MainPort}/dashboard",resizable=True,text_select=True,title='FluxLAN',min_size=(722,453),background_color='#FFFFFF')
 
 SystemFolders=["Captures","Motion detected","FluxLAN"]
 AllowedExt=['jpg','mp4','log','png','fluxlan']
@@ -303,8 +303,8 @@ else:
  YP      Y88888P ~Y8888P' YP    YP Y88888P YP   YP VP   V8P {APP_VERSION}
 """)
 
-
 if DEVELOPER_MODE:
+   FluxLog(f"Release type : {APP_RELEASE_TYPE}",KeyValues=True,level='dev')
    FluxLog('Running in developer mode',level='high')
    FluxLog(f'Developer Mode: Using random REL_HASH. Will replace appdata everytime {'{'+APP_REL_HASH+'}'}',level='dev',KeyValues=True)
 
@@ -570,7 +570,7 @@ def admin():
 
    if FirstTime:
     if not WelcomePageOpened:
-     webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={OS_version}_{sys.platform}&o={MainPort}")
+     webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={OS_version}_{sys.platform}&o={MainPort}&t={"performance"if APP_RELEASE_TYPE=='PERF' else "lite"}")
      WelcomePageOpened=True
    return render_template('tromoSM-admin.html')
 
@@ -901,7 +901,10 @@ if(__name__=="__main__"):
        def webclose():
           CloseSelf('verified')
        def webidentify():
-        MainWindow.evaluate_js('window.USING_WEBVIEW=true',callback=None)
+         try:
+          MainWindow.evaluate_js('window.USING_WEBVIEW=true',callback=None)
+         except errors.WebViewException as err:
+            FluxLog(f'Failed to add watermark : {err}',level='error',KeyValues=True)
        MainWindow.events.closing+=webclose
        start(webidentify,private_mode=False,storage_path=os.path.join(APPROOT,"prefr"),debug=DEVELOPER_MODE)
 
