@@ -234,7 +234,7 @@ tooltip[closing]{transform: translateY(-10px) scale(0.8,1.2);opacity: 0;animatio
 FlexRR{display: flex;gap: 2px;margin-top: 5px;}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none;-moz-appearance: none;appearance: none;margin: 0; 
 }input[type=number] {-moz-appearance: textfield;background: #00000024;border: none;border-radius: 50px;padding: 4px;}
-flexrr:not([update],[social]) *{height: 100%;width: 100%;font-family: inherit;}
+flexrr:not([update],[social],[legal]) *{height: 100%;width: 100%;font-family: inherit;}
 flexrr input{width: 85%;}
 flexrr button {flex-shrink: 2;}
 popup button:active{transform: scale(1.05);filter: brightness(1.1);transition: 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);}
@@ -255,11 +255,11 @@ button[busy]::before{filter: blur(10px); width: 100%;height: 100%;content: '';po
 [warning=large]{font-size: 13px;font-weight: 700;margin: 6px 0px 1px 0px;}
 [button=open]{background: #07070742;font-weight: 600; padding: 2px 6px; border-radius: 50px; mix-blend-mode: screen; color: beige;position: absolute; right: 5px; top: 12px;cursor: pointer;}
 button[start]{padding: 3px 7px;box-sizing: border-box;margin-top: 10px !important;}[start-recording] button{margin: 1px;}
-flpop[privacy] h1,[disconnected] h1{font-size: 25px;font-weight: 818;margin: 0;margin-bottom: 12px;}
+flpop[privacy] h1,[disconnected] h1,[third-party-licenses] h1{font-size: 25px;font-weight: 818;margin: 0;margin-bottom: 12px;}
 flpop[privacy] p:not([warning]){padding: 0;margin: 0;font-size: 14px;color: #575555;}  
 flpop[privacy]{box-shadow: 0px 6px 10px #00000029;}
-flpop[privacy] [close],[disconnected] [close],flpop[link-camera] [close]{width: 24px;height: 24px;transition: 0.1s; position: absolute;top: 0;right: 0;border-radius: 50px;border: none;font-size: 17px;display: flex;align-items: center;justify-content: center;margin: 14px;padding: 4px;box-sizing: content-box;cursor: pointer;  background: #00000026;color: white;}
-flpop[privacy] [close]:hover,[disconnected] [close]:hover,flpop[link-camera] [close]:hover{transform: rotate(180deg);}
+flpop[privacy] [close],[disconnected] [close],flpop[link-camera] [close],[third-party-licenses] [close],[terms-of-service] [close]{width: 24px;height: 24px;transition: 0.1s; position: absolute;top: 0;right: 0;border-radius: 50px;border: none;font-size: 17px;display: flex;align-items: center;justify-content: center;margin: 14px;padding: 4px;box-sizing: content-box;cursor: pointer;  background: #00000026;color: white;}
+flpop[privacy] [close]:hover,[disconnected] [close]:hover,flpop[link-camera] [close]:hover,flpop[third-party-licenses] [close]:hover,flpop[terms-of-service] [close]:hover{transform: rotate(180deg);}
 [tooltip="open privacy statement"]{cursor: pointer;}
 [nonusrpageinner]{pointer-events: all;  background: #0000003d;color: white;border: none;border-radius: 50px;padding: 5px 10px;cursor: pointer;}
 [camicon]{  font-size: 66px;color: #c2c2c2;}
@@ -277,7 +277,7 @@ relborder{overflow:auto;resize: both;scrollbar-width: none;border-radius: 10px;}
 [capturing]{filter: brightness(0.28) contrast(1.8) !important;}
 [stream]{animation: open-str 0.3s;}
 @keyframes open-str{from{filter: blur(50px) brightness(100);transform: scale(0);}to{filter: none;transform: scale(1);}}
-@media (max-width:901px){flpop{width: 90%;height: 70%;}}
+@media (max-width:901px){flpop{width: 90%;}}
 [float='float']{backdrop-filter: blur(20px);-webkit-backdrop-filter: blur(20px);}
 loading {width: 100px;height: 100px;position: fixed;z-index: +9999;transform: translate(-50%,-50%) scale(1);left: 50%;top: 50%;background: var(--backdrop-bg-nonres);box-shadow: 0px 10px 13px #0006;transition: 0.3s !important;border-radius: 20px;backdrop-filter: blur(15px);-webkit-backdrop-filter: blur(20px);}
 loading[closing]{transform: translate(-50%,-50%) scale(0);border-radius: 25px;}
@@ -292,3 +292,6 @@ loading::after {content: 'loading';position: absolute;bottom: 0;left: 0;width: 1
 webview-loading{width: 100%;height: 100%;background: white;z-index: +9999;position: fixed;top: 0;left: 0;transition: 0.2s;}
 webview-loading[closing]{opacity: 0;width: 100vh;height: 100vh;transform: scale(0);border-radius: 50px;}
 @supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {popup,dashboard,flpop,linkindicator,loading{background: var(--backdrop-bg);}}
+[legal]{margin: 0px 6%;transform: translateY(-7px);gap: 10px;}
+[third-party-licenses] [warning]{font-weight: 700;color: #686868;font-size: 14px;}
+[third-party-licenses] [warning] span{margin: 0px 7px;font-weight: 500;color: #8f8f8f;}
