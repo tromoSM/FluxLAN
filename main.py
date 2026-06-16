@@ -57,10 +57,12 @@ APP_BUILD='beta'
 APP_SUPPORT='https://tromosm.gt.tc/?feedback=true&utm_source=normal_fluxlan_console'
 APP_SUPPORT_LTS_FEEDBACK="https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=lts_fluxlan_console_n_tray"
 APP_ANALYTICS_LTS='https://tromosm.github.io/tromoSM-analytics/analytics/fluxlan'
-APP_PRIVACY_POLICY_VERSION=3
+APP_PRIVACY_POLICY_VERSION=4
 APP_GITHUB='https://github.com/tromoSM/FluxLAN'
 APP_PAGE_OTHR_PROJ="https://tromosm.github.io/tromoSM/t/?utm_source=flux_otherprojects_tray#project"
 APP_REL_HASH='flxrelpre-09beta'
+APP_THIRD_PARTY_LICENSES={"Flask":{"license":"BSD-3-Clause","version":"3.1.3"},"Flask-SocketIO":{"license":"MIT","version":"5.6.1"},"Werkzeug":{"license":"BSD-3-Clause","version":"3.1.8"},"Jinja2":{"license":"BSD","version":"3.1.6"},"NumPy":{"license":"BSD-3-Clause","version":"2.4.4"},"OpenCV":{"license":"Apache-2.0","version":"4.13.0.92"},"Requests":{"license":"Apache-2.0","version":"2.33.1"},"Pillow":{"license":"MIT-CMU","version":"12.2.0"},"Rich":{"license":"MIT","version":"15.0.0"},"Cryptography":{"license":"Apache-2.0 OR BSD-3-Clause","version":"48.0.0"},"qrcode":{"license":"BSD","version":"8.2"},"platformdirs":{"license":"MIT","version":"4.9.6"},"pystray":{"license":"LGPLv3","version":"0.19.5"},"pywebview":{"license":"BSD","version":"6.2.1"},"Socket.IO":{"license":"MIT"},"Lottie":{"license":"MIT"}}
+APP_TOS_VERSION=1
 
 MAINUSERSDI={}
 ALLUSERS=[]
@@ -177,6 +179,9 @@ if DEVELOPER_MODE:
 #stackoverflow/a/2257449 Posted by Ignacio Vazquez-Abrams
 FlaskLog=logging.getLogger('werkzeug')
 FlaskLog.level=logging.ERROR
+if APP_RELEASE_TYPE=='PERF':
+   PerfLog=logging.getLogger('pywebview')
+   PerfLog.level=logging.WARNING
 
 FluxLanLog=logging.getLogger(__name__)
 logging.basicConfig(handlers=[RichHandler(rich_tracebacks=True,show_level=False,show_path=False,show_time=False,markup=True,highlighter=NullHighlighter())],format='%(message)s',level=logging.INFO)
@@ -234,15 +239,28 @@ def CloseSelf(ver):
     S.emit('closing','normal')
     os.kill(os.getpid(),signal.SIGINT)
 
+def refreshPage(starter='/dashboard',params=None,newTab=True):
+   locations={"?linkcam=true":'/link_camera',"?checkupdate=true":'check_update/','':'dashboard/'}
+   uri=f'https://localhost:{MainPort}{starter}{params if params else ''}'
+   if APP_RELEASE_TYPE=='PERF':
+      MainWindow.load_url(uri)
+      FluxLog(f'refreshing page location to {locations.get(params)}')
+   elif APP_RELEASE_TYPE=='LITE':
+      if newTab:
+         webbrowser.open_new_tab(uri)
+      else:
+         webbrowser.open(uri)
+      FluxLog(f'Opening {locations.get(params)}')
+
 def StartTray():
             imicon=Image.open(os.path.join(APPROOT,'static','Assets','icon-w.ico'))
             menu=Menu(
                MenuItem(f'𝗙𝗹𝘂𝘅𝗟𝗔𝗡 - {APP_VERSION}',None,enabled=False),
                Menu.SEPARATOR,
                MenuItem('Open dashboard',lambda item,icon:
-                        webbrowser.open_new_tab(f'https://localhost:{MainPort}/dashboard')
+                        refreshPage()
                         ),
-               MenuItem('Link device',lambda it,ic:webbrowser.open(f'https://localhost:{MainPort}/dashboard?linkcam=true')),
+               MenuItem('Link device',lambda it,ic:refreshPage(params='?linkcam=true',newTab=False)),
                Menu.SEPARATOR,
                MenuItem('Debug console',ConsoleState,checked=lambda item:ConsoleON,enabled=ConsoleToggleFeature),
                MenuItem('Advanced',Menu(
@@ -253,6 +271,7 @@ def StartTray():
                      MenuItem(f'Appdata path : {APPROOT}',None,enabled=False),
                      Menu.SEPARATOR,
                      MenuItem(f'Version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
+                     MenuItem(f'Release type : {'performance'if APP_RELEASE_TYPE=='PERF'else 'lite'}',None,enabled=False),
                      MenuItem(f'Developer mode : {DEVELOPER_MODE}',None,enabled=False),
                      Menu.SEPARATOR,
                      MenuItem(f'OS compatibility : {OSsupport}',None,enabled=False),
@@ -270,7 +289,7 @@ def StartTray():
                   MenuItem('Contact by email',lambda it,ic:webbrowser.open_new_tab('mailto:tromosm7@gmail.com'))
                )),
                Menu.SEPARATOR,
-               MenuItem('Check for updates',lambda it,ic:webbrowser.open(f'https://localhost:{MainPort}/dashboard?checkupdate=true')),
+               MenuItem('Check for updates',lambda it,ic:refreshPage(params='?checkupdate=true',newTab=False)),
                MenuItem('Close Fluxlan',lambda it,ic:CloseSelf('verified'))
             )
             icon=Icon('FluxLAN',imicon,'FluxLAN',menu=menu)
@@ -307,7 +326,8 @@ if DEVELOPER_MODE:
    FluxLog(f"Release type : {APP_RELEASE_TYPE}",KeyValues=True,level='dev')
    FluxLog('Running in developer mode',level='high')
    FluxLog(f'Developer Mode: Using random REL_HASH. Will replace appdata everytime {'{'+APP_REL_HASH+'}'}',level='dev',KeyValues=True)
-
+   if APP_RELEASE_TYPE=='PERF':
+      FluxLog(f'LocalStorage Path : {os.path.join(APPROOT,"prefr")}',KeyValues=True,level='dev')
 def refreshNetworkInfo():
  global NetworkStrength,NetworkRefreshCount
  if sys.platform=='win32':
@@ -344,13 +364,13 @@ refreshNetworkInfo()
 def linkLookup():
    global APP_SUPPORT
    try:
-      mainRes=requests.get(url=APP_SUPPORT,timeout=5)
+      mainRes=requests.get(url=APP_SUPPORT,timeout=5,headers={"User-Agent":"Mozilla/5.0"})
       if mainRes.status_code==200:
          pass
       else :
          APP_SUPPORT=APP_SUPPORT_LTS_FEEDBACK
          FluxLog(f'Main support site is returning {mainRes.status_code} : using fallback site',level='warning',KeyValues=True)
-   except requests.exceptions.ConnectionError:
+   except requests.exceptions.ConnectionError as er:
          APP_SUPPORT=APP_SUPPORT_LTS_FEEDBACK
          FluxLog(f'Main support site is not responding : using fallback site',level='warning',KeyValues=True)
 
@@ -535,6 +555,8 @@ def ask(q):
       return {"qr": MainQR,"link":f"https://{MainIP}:{MainPort}"}
    elif q=='pp':
       return {"version":APP_PRIVACY_POLICY_VERSION}
+   elif q=='legal':
+      return {"thirdPartyLicense":APP_THIRD_PARTY_LICENSES,'tos':APP_TOS_VERSION}
 @S.on('OpenFolder')
 def openF(fl):
     if sys.platform=='win32':
