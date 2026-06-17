@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded',function(){
     const S=io()
     dynamiclink=new URLSearchParams(window.location.search)
     let allcams=[]
-
+    chkupdatebylink=false
      lottie.loadAnimation({
             container:document.querySelector('loading'),
             renderer:"svg",
@@ -73,6 +73,72 @@ window.addEventListener('DOMContentLoaded',function(){
              document.querySelectorAll('[nonrec]').forEach(f=>{f.remove()})
             }
         }
+    }
+    async function showTOS(){
+                     let fullx=document.createElement('f')
+                     let infullx=document.createElement('flpop')
+                     infullx.setAttribute('closing','')
+                     infullx.setAttribute('terms-of-service','')
+                     let scrollable=document.createElement('scrollable')
+                     let title=document.createElement('h1')
+                     title.innerText='terms of service'
+
+                     S.emit('INFO','legal',async (legal)=>{
+                       let tosAll=document.createElement('p')
+                       tosAll.setAttribute('warning','')
+                       let offline=true
+                       let innertos
+                       if(navigator.onLine){
+                        try{
+                              await fetch(UPDATECHKROOT).then(e=>e.json()).then(info=>{
+                                if(info.legal.terms_of_service.version>legal.tos){
+                                    offline=false
+                                    innertos=info.legal.terms_of_service.innerhtml
+                                    console.log('using online tos')
+                                    console.log(`    offline version ${legal.tos}\n    online version: ${info.legal.terms_of_service.version}`)
+                                    console.log(`online version is ${parseInt(info.legal.terms_of_service.version)-parseInt(legal.tos)} versions ahead`)
+                                }
+                            })
+                        }
+                        catch(err){
+                            offline=true
+                            console.warn(err)
+                        }
+                       }
+                       if(offline){
+                        tosAll.innerHTML=`
+                        By using this app, you agree to use it only for lawful purposes. You are responsible for any cameras, devices, and content connected to your account.
+                        The app is provided "as is" without guarantees of uninterrupted service or complete security. We may update, modify, or discontinue features at any time.
+                        You must not use the app to violate privacy laws, access devices without permission, or engage in illegal activities.
+                        We are not responsible for any loss, damage, or unauthorized access resulting from the use of the app.
+                        By continuing to use the app, you agree to these terms.
+                        `
+                       }
+                       else{
+                        tosAll.innerHTML=innertos
+                       }
+
+                       let agree=document.createElement('button')
+                       agree.setAttribute('default','button')
+                       if(localStorage.getItem('tos')){
+                        agree.innerText='close'
+                       }
+                       else{
+                        agree.innerHTML='agree'
+                       }
+                       agree.addEventListener('click',async function(){
+                        infullx.setAttribute('closing','')
+                        localStorage.setItem('tos','a')
+                        await sleep(200)
+                        fullx.remove()
+                       })
+                       scrollable.append(tosAll,agree)
+                       infullx.append(title,scrollable)
+                       fullx.append(infullx)
+                       document.body.append(fullx)
+                       await sleep(200)
+                       infullx.removeAttribute('closing')
+                     })
     }
     async function notification({level='__info__',title='',body='',icon='__none__',timeout=4}={}){
         let notification=document.createElement('notification')
@@ -221,6 +287,9 @@ window.addEventListener('DOMContentLoaded',function(){
     }
     if(!localStorage.getItem('recording')){
                     localStorage.setItem('recording','yes')
+    }
+    if(!localStorage.getItem('tos')){
+        showTOS()
     }
     //layout
     let mainlayoutbt=['hide ribbon|keyboard_arrow_up','color balance|format_paint','frame rate|motion_mode','devices|mobile_camera','1saved folder|folder','#','$1start recording|play_arrow','1capture|photo_camera','1flip camera|flip_camera_ios',"motion detector|motion_sensor_active",'link camera|qr_code_2','advanced|info']
@@ -1042,13 +1111,74 @@ window.addEventListener('DOMContentLoaded',function(){
                 })
 
                 social.append(github,otherprojx,feedback,privacy)
+                //legal
+                let legal=document.createElement('flexrr')
+                legal.setAttribute('legal','')
+                let legalstucture=['terms of service','third party licenses']
+                await legalstucture.forEach(eachleg=>{
+                    let opener=document.createElement('p')
+                    opener.setAttribute('warning','small')
+                    opener.innerText=eachleg
+                    opener.setAttribute('tooltip',`open ${eachleg}`)
+                    legal.append(opener)                   
 
+                    opener.addEventListener('click',async function(){
+                     if(eachleg=='terms of service'){
+                        showTOS()
+                     }
+                     else{
+                     let fullx=document.createElement('f')
+                     let infullx=document.createElement('flpop')
+                     infullx.setAttribute('closing','')
+                     infullx.setAttribute(eachleg.replaceAll(' ','-'),'')
+                     let scrollable=document.createElement('scrollable')
+                     let close=document.createElement('button')
+                     close.innerText='close'
+                     close.setAttribute('close','')
+                     close.className='material-symbols-rounded'
+                     close.addEventListener('click',async function(){
+                        infullx.setAttribute('closing','')
+                        await sleep(200)
+                        fullx.remove()
+                     })
+                     let title=document.createElement('h1')
+                     title.innerText=eachleg
+
+                     S.emit('INFO','legal',(legal)=>{
+                     if(eachleg=='terms of service'){
+                     }
+                     else if(eachleg=='third party licenses'){
+                        Object.entries(legal.thirdPartyLicense).forEach(([name,software])=>{
+                            let infop=document.createElement('p')
+                            let license=''
+                            if(software.version && software.version!=undefined){
+                                license=`v${software.version}`
+                            }
+                            infop.innerHTML=`${name} <span>${license} - ${software.license}</span>`
+                            infop.setAttribute('warning','')
+                            scrollable.appendChild(infop)
+                        })
+                     }
+                    })
+                    infullx.append(title,scrollable)
+                    if(eachleg!='terms of service'){
+                        infullx.append(close)
+                    }
+                    fullx.append(infullx)
+                    document.body.append(fullx)
+                    await sleep(200)
+                    infullx.removeAttribute('closing')
+                    
+                }})
+                })
+                refreshTooltip()
+                 
                  let footer=document.createElement('flexrr')
                  let copyright=document.createElement('p')
                  copyright.setAttribute('warning','')
                  copyright.innerHTML='© 2026 tromoSM. Licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0">apache 2.0</a>. FluxLAN is open-source • <a href="https://github.com/tromoSM/FluxLAN">contribute here</a>'
                  footer.append(copyright)
-                 inscroll.append(imim,infobar,flexxr,seperatorSS,flexxraa,seperatorS,flexxra,social,footer)
+                 inscroll.append(imim,infobar,flexxr,seperatorSS,flexxraa,seperatorS,flexxra,social,legal,footer)
                  full.appendChild(infull)
                  document.body.append(full)
                  await sleep(200)
@@ -1056,10 +1186,12 @@ window.addEventListener('DOMContentLoaded',function(){
                  refreshTooltip()
                  refreshLinks()
                 chkupdate.addEventListener('click',async function(){
+                 let message=false
                  try{
                  fetch(UPDATECHKROOT).then(n=>
                   n.json()).then(async app=>{
                     if(app.main.version_release>window.FluxLAN_version_release){
+                        message='Update available. Click download installer to get the latest version'
                         chkupdate.innerText='Download installer'
                         chkupdate.addEventListener('click',async function(){
                             chkupdate.setAttribute('busy','')
@@ -1099,13 +1231,21 @@ window.addEventListener('DOMContentLoaded',function(){
                         p.innerText='FluxLAN is up to date.'
                         p.setAttribute('warning','')
                         flexC.appendChild(p)
+                        message='FluxLAN is up to date'
                     }
                     else if(app.main.version_release<window.FluxLAN_version_release){
                         chkupdate.setAttribute('disabled','')
                         let p=document.createElement('p')
                         p.innerText='FluxLAN is up to date (stable).'
                         p.setAttribute('warning','')
+                        message='FluxLAN is up to date (stable)'
                         flexC.appendChild(p)
+                    }
+                    if(chkupdatebylink){
+                     await sleep(50)
+                     if(message){
+                      alert(message)
+                     }
                     }
                   })
                  }
@@ -1227,13 +1367,14 @@ window.addEventListener('DOMContentLoaded',function(){
     }
      if(dynamiclink.get('checkupdate')=='true'){
      (async()=>{
-       await sleep(200)
+       chkupdatebylink=true
+       await sleep(500)
        if (document.querySelector('[action="advanced"]')) {
-        console.log('ayo')
+        console.log('opening advanced tab')
         document.querySelector('[action="advanced"]').click()
-        await sleep(250)
+        await sleep(400)
         if(document.querySelector('flexrr[update] button')){
-        console.log('yo')
+        console.log('checking for updates')
         await sleep(100)
         document.querySelector('flexrr[update] button').click()
         }
