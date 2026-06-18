@@ -1,5 +1,7 @@
 APP_RELEASE_TYPE='LITE'#lite or perf
 
+import time
+TIME_BEF_IMPORTS=time.perf_counter()
 from flask import Flask,request,render_template,abort
 from flask_socketio import SocketIO,emit
 import os
@@ -37,7 +39,6 @@ import requests
 import qrcode
 from io import BytesIO
 import cryptography #keep ts
-import time
 import shutil
 from platformdirs import user_data_dir
 from pystray import Icon,Menu,MenuItem
@@ -45,8 +46,50 @@ from PIL import Image
 from string import ascii_letters,digits
 from random import choices
 from platform import system,release
+TIME_AFT_IMPORTS=time.perf_counter()
+
+#cli modifications
+CLI_MODIFIED=True
+DEV_OPTIONS=True
+DEVMODE_MODIFIED=False
+DEVMODE_MODIFIED_STATE=False
+DELAY_INFO_VERSION=False
+DELAY_INFO_EXECTIME=False
+
+for dynamicvar in sys.argv[1:]:
+   if '=' in dynamicvar:
+    tempstr=dynamicvar.split('=',1)[1].upper()
+   else:
+      tempstr=dynamicvar
+   if dynamicvar.upper().startswith('SETMODE='):
+      if tempstr in ('PERF','LITE'):
+         ORIGINAL_RELEASE_TYPE=APP_RELEASE_TYPE
+         APP_RELEASE_TYPE=tempstr
+         CLI_MODIFIED=True
+         print(f'| Changing release from {ORIGINAL_RELEASE_TYPE} to {APP_RELEASE_TYPE} [cli]')
+      else:
+         print('| setmode attributes must be "perf" or "lite" (case insensitive).')
+   elif dynamicvar.upper().startswith('DEVMODE='):
+      if tempstr in ('TRUE','FALSE'):
+         DEVMODE_MODIFIED=True
+         CLI_MODIFIED=True
+         DEVMODE_MODIFIED_STATE=True if tempstr=='TRUE' else False
+         print(f'| Turning developer mode {"on" if tempstr=="TRUE" else "off"} [cli]')
+      else:
+         print('| devmode attributes must be a bool. true or false (case insensitive).')
+   elif dynamicvar in ('v','-v','version','Version','info','build','-info','-build'):
+      DELAY_INFO_VERSION=True
+   elif dynamicvar in ('ex','-ex','exectime','exctime','-exectime','exctime'):
+      print('| Execution time will be logged after the app fully starts')
+      DELAY_INFO_EXECTIME=True
+###s
+
 if APP_RELEASE_TYPE=='PERF':
-   from webview import create_window,start,settings,FileDialog,errors
+   try:
+    from webview import create_window,start,settings,FileDialog,errors
+   except ModuleNotFoundError:
+      print('┃ To use the performance release, Pywebview must be installed.')
+      print('┗   `pip install pywebview` or download the performance release from github')
 
 APP_VERSION='v0.9 pre'
 APP_VERSION_RELEASE=0
@@ -64,6 +107,7 @@ APP_REL_HASH='flxrelpre-09beta'
 APP_THIRD_PARTY_LICENSES={"Flask":{"license":"BSD-3-Clause","version":"3.1.3"},"Flask-SocketIO":{"license":"MIT","version":"5.6.1"},"Werkzeug":{"license":"BSD-3-Clause","version":"3.1.8"},"Jinja2":{"license":"BSD","version":"3.1.6"},"NumPy":{"license":"BSD-3-Clause","version":"2.4.4"},"OpenCV":{"license":"Apache-2.0","version":"4.13.0.92"},"Requests":{"license":"Apache-2.0","version":"2.33.1"},"Pillow":{"license":"MIT-CMU","version":"12.2.0"},"Rich":{"license":"MIT","version":"15.0.0"},"Cryptography":{"license":"Apache-2.0 OR BSD-3-Clause","version":"48.0.0"},"qrcode":{"license":"BSD","version":"8.2"},"platformdirs":{"license":"MIT","version":"4.9.6"},"pystray":{"license":"LGPLv3","version":"0.19.5"},"pywebview":{"license":"BSD","version":"6.2.1"},"Socket.IO":{"license":"MIT"},"Lottie":{"license":"MIT"}}
 APP_TOS_VERSION=1
 
+
 MAINUSERSDI={}
 ALLUSERS=[]
 RECORDED_DATA=[]
@@ -71,6 +115,9 @@ RECORDED_DATA=[]
 DEVELOPER_MODE=True
 USETRAYICON=True
 ALLOWUNSAFEDASHBOARD=False 
+
+if DEVMODE_MODIFIED:
+   DEVELOPER_MODE=DEVMODE_MODIFIED_STATE
 
 LASTFrame='__not-found__'
 orientation='up'
@@ -96,6 +143,17 @@ UnsupportedFeatures=''
 NetworkRefreshCount=0
 NetworkStrength=''
 OS_version='unavailable'
+
+TIME_AFT_STARTUP=time.perf_counter()
+
+if DELAY_INFO_VERSION:
+   print(f"""
+ Main : {APP_VERSION} ({APP_DATE})
+ Build : {APP_VERSION}/{APP_VERSION_RELEASE}({APP_RELEASE_TYPE}/{APP_BUILD}) {APP_DATE} {"{"}{APP_REL_HASH}{"}"}
+ Legal : tos({APP_TOS_VERSION}) privacy policy({APP_PRIVACY_POLICY_VERSION}) 
+ CLI : modified={CLI_MODIFIED} devmode modified={DEVMODE_MODIFIED}
+ Additional info : imports=({int(TIME_AFT_IMPORTS-TIME_BEF_IMPORTS)}s/{TIME_AFT_IMPORTS-TIME_BEF_IMPORTS})
+""")
 
 try:
  if not DEVELOPER_MODE:
@@ -175,29 +233,30 @@ def OS_VERSION():
 #Logging
 if DEVELOPER_MODE:
  APP_REL_HASH=''.join(choices(ascii_letters+digits,k=10))
- 
 #stackoverflow/a/2257449 Posted by Ignacio Vazquez-Abrams
+
 FlaskLog=logging.getLogger('werkzeug')
-FlaskLog.level=logging.ERROR
+FlaskLog.setLevel(logging.WARNING)
 if APP_RELEASE_TYPE=='PERF':
    PerfLog=logging.getLogger('pywebview')
-   PerfLog.level=logging.WARNING
+   PerfLog.setLevel(logging.WARNING)
 
 FluxLanLog=logging.getLogger(__name__)
 logging.basicConfig(handlers=[RichHandler(rich_tracebacks=True,show_level=False,show_path=False,show_time=False,markup=True,highlighter=NullHighlighter())],format='%(message)s',level=logging.INFO)
 
-def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False,KeyValPadding=False):
+def FluxLog(message,level='info',padding=1,CoverText=False,KeyValues=False,KeyValPadding=False,insidepadding=1):
    colortable={'info':'bright_blue','error':'red',"high":'bright_red','debug':'magenta','warning':'yellow','dev':'bright_green'}
    if not CoverText and not KeyValues:
-    message=f"[{colortable.get(level)}]|[/{colortable.get(level)}] {message}"
+    message=f"[{colortable.get(level)}]|[/{colortable.get(level)}]{" "*insidepadding}{message}"
    elif not KeyValues:
-    message=f"[{colortable.get(level)}]| {message}[/{colortable.get(level)}]"
+    message=f"[{colortable.get(level)}]|{" "*insidepadding}{message}[/{colortable.get(level)}]"
    if KeyValues:
       colored=message.split(':',1)
-      message=f"[{colortable.get(level)}]| {colored[0]}:[/{colortable.get(level)}]{colored[1]}"
+      message=f"[{colortable.get(level)}]|{" "*insidepadding}{colored[0]}:[/{colortable.get(level)}]{colored[1]}"
    if KeyValPadding:
       keyval=message.split(':',1)
       message=f"{keyval[0]}\n{(" "*7)+keyval[1]}"
+
    Loglevel={"info":FluxLanLog.info,"error":FluxLanLog.error,'high':FluxLanLog.info,'debug':FluxLanLog.debug,'warning':FluxLanLog.warning,'dev':FluxLanLog.warning}
    
    LogFunc=Loglevel.get(level)
@@ -321,11 +380,12 @@ else:
  88      88booo. 88b  d88 .8P  Y8. 88booo. 88   88 88  V888 
  YP      Y88888P ~Y8888P' YP    YP Y88888P YP   YP VP   V8P {APP_VERSION}
 """)
-
+TIME_AFT_CONSOLE=time.perf_counter()
 if DEVELOPER_MODE:
    FluxLog(f"Release type : {APP_RELEASE_TYPE}",KeyValues=True,level='dev')
    FluxLog('Running in developer mode',level='high')
    FluxLog(f'Developer Mode: Using random REL_HASH. Will replace appdata everytime {'{'+APP_REL_HASH+'}'}',level='dev',KeyValues=True)
+   FluxLog(f'Startup Took {int(TIME_AFT_CONSOLE-TIME_BEF_IMPORTS)}s')
    if APP_RELEASE_TYPE=='PERF':
       FluxLog(f'LocalStorage Path : {os.path.join(APPROOT,"prefr")}',KeyValues=True,level='dev')
 def refreshNetworkInfo():
@@ -594,6 +654,7 @@ def admin():
     if not WelcomePageOpened:
      webbrowser.open_new_tab(f"{APP_ANALYTICS_LTS}?v={APP_VERSION}&r={APP_BUILD}&p={OS_version}_{sys.platform}&o={MainPort}&t={"performance"if APP_RELEASE_TYPE=='PERF' else "lite"}")
      WelcomePageOpened=True
+     
    return render_template('tromoSM-admin.html')
 
 @S.on('Pref')
@@ -911,6 +972,15 @@ def change(status):
    CloseWhenBattery=status
 
 if(__name__=="__main__"):
+    TIME_BEF_FULLSTART=time.perf_counter()
+    if DELAY_INFO_EXECTIME: #exec arg
+       FluxLog('===EXECTIME===',CoverText=True)
+       FluxLog(f'Imports : {int(TIME_AFT_IMPORTS-TIME_BEF_IMPORTS)}s',KeyValues=True,insidepadding=2)
+       FluxLog(f'Args/dynamic : {int(TIME_AFT_STARTUP-TIME_BEF_IMPORTS)}s',KeyValues=True,insidepadding=2)
+       FluxLog(f'Startup : {int(TIME_AFT_CONSOLE-TIME_BEF_IMPORTS)}s',KeyValues=True,insidepadding=2)
+       FluxLog(f'Fullstart : {int(TIME_BEF_FULLSTART-TIME_BEF_IMPORTS)}s',KeyValues=True,insidepadding=2)
+       FluxLog(f'After start : {int(TIME_BEF_FULLSTART-TIME_AFT_STARTUP)}s',KeyValues=True,insidepadding=2)
+
     MainServeThread=threading.Thread(
        target=lambda:S.run(main,debug=DEVELOPER_MODE,host='0.0.0.0',port=MainPort,ssl_context='adhoc',use_reloader=False),
        daemon=True)
