@@ -55,6 +55,7 @@ DEVMODE_MODIFIED=False
 DEVMODE_MODIFIED_STATE=False
 DELAY_INFO_VERSION=False
 DELAY_INFO_EXECTIME=False
+FluxlanSource=os.path.basename(sys.argv[0])
 
 for dynamicvar in sys.argv[1:]:
    if '=' in dynamicvar:
@@ -86,26 +87,28 @@ for dynamicvar in sys.argv[1:]:
       print(
          f"""
 USAGE:\n
- fluxlan.exe [options] 
- or fluxlan.py [options]\n
+ {FluxlanSource} [options] \n
 OPTIONS :\n
  SETMODE=<perf|lite> (case insensitive)
     Change app mode to performance mode or lite mode.
     Examples : 
-         fluxlan.exe Setmode=perf
-         fluxlan.exe Setmode=lite\n
+         {FluxlanSource} Setmode=perf
+         {FluxlanSource} Setmode=lite\n
  DEVMODE=<true|false> (case insensitive)
     Change developer mode.
     Examples :
-         fluxlan.exe devmode=true
-         fluxlan.exe devmode=false\n
+         {FluxlanSource} devmode=true
+         {FluxlanSource} devmode=false\n
  -v, version, build, info 
     Display version and build info
     Examples :
-         fluxlan.exe -v
-         fluxlan.exe version\n
+         {FluxlanSource} -v
+         {FluxlanSource} version\n
  -ex,exectime,exctime
     Measures the time the fluxlan took to load and displays the time
+    Examples :
+         {FluxlanSource} -ex
+         {FluxlanSource} exectime
 """
       )
       sys.exit(0)
@@ -185,7 +188,6 @@ if DELAY_INFO_VERSION:
  CLI : modified={CLI_MODIFIED} devmode modified={DEVMODE_MODIFIED}
  Additional info : imports=({int(TIME_AFT_IMPORTS-TIME_BEF_IMPORTS)}s/{TIME_AFT_IMPORTS-TIME_BEF_IMPORTS})
 """)
-   input('')
    sys.exit(0)
 
 try:
