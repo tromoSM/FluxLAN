@@ -82,7 +82,38 @@ for dynamicvar in sys.argv[1:]:
    elif dynamicvar in ('ex','-ex','exectime','exctime','-exectime','exctime'):
       print('| Execution time will be logged after the app fully starts')
       DELAY_INFO_EXECTIME=True
-###s
+   elif dynamicvar in ('-h','h','help','-help','/?','?','--help','--h'):
+      print(
+         f"""
+USAGE:\n
+ fluxlan.exe [options] 
+ or fluxlan.py [options]\n
+OPTIONS :\n
+ SETMODE=<perf|lite> (case insensitive)
+    Change app mode to performance mode or lite mode.
+    Examples : 
+         fluxlan.exe Setmode=perf
+         fluxlan.exe Setmode=lite\n
+ DEVMODE=<true|false> (case insensitive)
+    Change developer mode.
+    Examples :
+         fluxlan.exe devmode=true
+         fluxlan.exe devmode=false\n
+ -v, version, build, info 
+    Display version and build info
+    Examples :
+         fluxlan.exe -v
+         fluxlan.exe version\n
+ -ex,exectime,exctime
+    Measures the time the fluxlan took to load and displays the time
+"""
+      )
+      sys.exit(0)
+   else:
+      print(f'"{dynamicvar}" is not an option')
+      print('Unknown option:\n   Try `Fluxlan.exe -h` for more information.')
+      sys.exit(0)
+###
 
 if APP_RELEASE_TYPE=='PERF':
    try:
@@ -154,6 +185,8 @@ if DELAY_INFO_VERSION:
  CLI : modified={CLI_MODIFIED} devmode modified={DEVMODE_MODIFIED}
  Additional info : imports=({int(TIME_AFT_IMPORTS-TIME_BEF_IMPORTS)}s/{TIME_AFT_IMPORTS-TIME_BEF_IMPORTS})
 """)
+   input('')
+   sys.exit(0)
 
 try:
  if not DEVELOPER_MODE:
