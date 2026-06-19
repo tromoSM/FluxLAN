@@ -3,7 +3,7 @@ APP_RELEASE_TYPE='LITE'#lite or perf
 import time
 TIME_BEF_IMPORTS=time.perf_counter()
 from flask import Flask,request,render_template,abort
-from flask_socketio import SocketIO,emit
+from flask_socketio import SocketIO
 import os
 import sys
 if sys.platform=='win32':
@@ -55,6 +55,8 @@ DEVMODE_MODIFIED=False
 DEVMODE_MODIFIED_STATE=False
 DELAY_INFO_VERSION=False
 DELAY_INFO_EXECTIME=False
+PORT_MODIFIED=False
+PORT_MODIFIED_STATE=False
 FluxlanSource=os.path.basename(sys.argv[0])
 
 for dynamicvar in sys.argv[1:]:
@@ -78,6 +80,15 @@ for dynamicvar in sys.argv[1:]:
          print(f'| Turning developer mode {"on" if tempstr=="TRUE" else "off"} [cli]')
       else:
          print('| devmode attributes must be a bool. true or false (case insensitive).')
+   elif dynamicvar.upper().startswith('SETPORT='):
+      print('| Warning: some port numbers are reserved by other apps or your system.')
+      if tempstr.isdigit():
+         PORT_MODIFIED=True
+         PORT_MODIFIED_STATE=tempstr
+         print(f'| Port changed to {tempstr} (once) [cli]')
+      else:
+         print(f'| setport attributes must be a digit')
+
    elif dynamicvar in ('v','-v','version','Version','info','build','-info','-build'):
       DELAY_INFO_VERSION=True
    elif dynamicvar in ('ex','-ex','exectime','exctime','-exectime','exctime'):
@@ -89,22 +100,22 @@ for dynamicvar in sys.argv[1:]:
 USAGE:\n
  {FluxlanSource} [options] \n
 OPTIONS :\n
- SETMODE=<perf|lite> (case insensitive)
+ SETMODE=<perf|lite> (case insensitive)\n
     Change app mode to performance mode or lite mode.
     Examples : 
          {FluxlanSource} Setmode=perf
          {FluxlanSource} Setmode=lite\n
- DEVMODE=<true|false> (case insensitive)
+ DEVMODE=<true|false> (case insensitive)\n
     Change developer mode.
     Examples :
          {FluxlanSource} devmode=true
          {FluxlanSource} devmode=false\n
- -v, version, build, info 
+ -v, version, build, info\n 
     Display version and build info
     Examples :
          {FluxlanSource} -v
          {FluxlanSource} version\n
- -ex,exectime,exctime
+ -ex,exectime,exctime\n
     Measures the time the fluxlan took to load and displays the time
     Examples :
          {FluxlanSource} -ex
@@ -162,7 +173,7 @@ MotionDetecting=False
 MotionFrameSkip=0
 MotionFrameLS=None
 MainIP='unavailable'
-MainPort='84'
+MainPort='3113'
 Protocol='unavailable'
 CloseWhenBattery=0 #v1+. val will chng
 LastMotionDetected=0
@@ -179,6 +190,11 @@ NetworkStrength=''
 OS_version='unavailable'
 
 TIME_AFT_STARTUP=time.perf_counter()
+
+if PORT_MODIFIED:
+   ORIGINAL_PORT=MainPort
+   MainPort=PORT_MODIFIED_STATE
+   print(f'| Port was changed from {ORIGINAL_PORT} to {MainPort} [cli]')
 
 if DELAY_INFO_VERSION:
    print(f"""
@@ -334,7 +350,7 @@ def CloseSelf(ver):
     os.kill(os.getpid(),signal.SIGINT)
 
 def refreshPage(starter='/dashboard',params=None,newTab=True):
-   locations={"?linkcam=true":'/link_camera',"?checkupdate=true":'check_update/','':'dashboard/'}
+   locations={"?linkcam=true":'/link_camera',"?checkupdate=true":'check_update/','':'dashboard/',None:'dashboard/'}
    uri=f'https://localhost:{MainPort}{starter}{params if params else ''}'
    if APP_RELEASE_TYPE=='PERF':
       MainWindow.load_url(uri)
@@ -584,7 +600,7 @@ def HostNotification(title,description,fallbackicon=0x40):
         maintk.show_toast(toast)
        except Exception as ex:
           ctypes.windll.user32.MessageBoxW(0,f"{title.upper()}\n{'￣'*(int(len(description)/2))}\n{description}","FluxLAN",fallbackicon)
-          FluxLog(f'Limited support - Windows version might be less than 10. Exeption : {ex}',level='warning',CoverText=True)
+          FluxLog(f'Limited support - Windows version might be less than 10. Exception : {ex}',level='warning',CoverText=True)
           #add to err log 10>win {ex}
        finally:
         FluxLog(f'Notification sent to host : {title}',KeyValues=True)
@@ -613,7 +629,7 @@ def mainroute(data):
 
 @S.on("join")
 def ini(dih):
-    MAINUSERSDI[request.sid]=dih['clieUSR']
+    MAINUSERSDI[request.sid]=dih.get('clieUSR')
     curuser=MAINUSERSDI.get(request.sid,request.sid)
     joinev(curuser)
 
@@ -678,7 +694,7 @@ def admin():
    if(request.remote_addr not in ['127.0.0.1','::1'] ) :
     if not ALLOWUNSAFEDASHBOARD:
       FluxLog(f'{request.remote_addr} is trying to access the dashboard.',level='warning',CoverText=True)
-      FluxLog(f'Dashboard is fobidden to IPs other than 127.0.0.1 or localhost. Use localhost:{MainPort} or 127.0.0.1:{MainPort} instead.',level='warning',CoverText=True)
+      FluxLog(f'Dashboard is forbidden to IPs other than 127.0.0.1 or localhost. Use localhost:{MainPort} or 127.0.0.1:{MainPort} instead.',level='warning',CoverText=True)
       FluxLog('To access the dashboard from other devices, Go to : System tray -> advanced -> developer options -> Allow other devices to access to dashboard.',level='warning',KeyValues=True,KeyValPadding=True)
       abort(403)
       return 'sybau'
@@ -834,7 +850,7 @@ def battery(data):
 @S.on('ClearAll')
 def clear(e):
    S.emit('ClientClear','')
-   FluxLog('Recieved signal to clear localstorage on all connected devices')
+   FluxLog('Received signal to clear localstorage on all connected devices')
 
 @S.on('ClearedAll')
 def cleared(user):
@@ -979,8 +995,11 @@ def importpref():
      FluxLog('Reading exported data')
      if APP_RELEASE_TYPE!="PERF":
       with open(imported,'r') as backup:
-        backupd=json.load(backup)
-        S.emit('recieveImport',backupd)
+        try:
+         backupd=json.load(backup)
+         S.emit('recieveImport',backupd)
+        except json.JSONDecodeError as er:
+         FluxLog(f'Cannot decode backup file. file may be corruped : {er}',level='error',KeyValPadding=True,KeyValues=True)
      else:
         with open(imported[0],'r') as backup:
          backupd=json.load(backup)
@@ -1017,7 +1036,7 @@ if(__name__=="__main__"):
        FluxLog(f'After start : {int(TIME_BEF_FULLSTART-TIME_AFT_STARTUP)}s',KeyValues=True,insidepadding=2)
 
     MainServeThread=threading.Thread(
-       target=lambda:S.run(main,debug=DEVELOPER_MODE,host='0.0.0.0',port=MainPort,ssl_context='adhoc',use_reloader=False),
+       target=lambda:S.run(main,debug=DEVELOPER_MODE,host='0.0.0.0',port=int(MainPort),ssl_context='adhoc',use_reloader=False),
        daemon=True)
 
     if USETRAYICON:
