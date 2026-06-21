@@ -49,7 +49,8 @@ from platform import system,release
 TIME_AFT_IMPORTS=time.perf_counter()
 
 #cli modifications
-CLI_MODIFIED=True
+
+CLI_MODIFIED=False
 DEV_OPTIONS=True
 DEVMODE_MODIFIED=False
 DEVMODE_MODIFIED_STATE=False
@@ -85,6 +86,7 @@ for dynamicvar in sys.argv[1:]:
       if tempstr.isdigit():
          PORT_MODIFIED=True
          PORT_MODIFIED_STATE=tempstr
+         CLI_MODIFIED=True
          print(f'| Port changed to {tempstr} (once) [cli]')
       else:
          print(f'| setport attributes must be a digit')
@@ -383,9 +385,10 @@ def StartTray():
                      MenuItem(f'Version : {APP_VERSION} ({APP_DATE}/{APP_BUILD})',None,enabled=False),
                      MenuItem(f'Release type : {'performance'if APP_RELEASE_TYPE=='PERF'else 'lite'}',None,enabled=False),
                      MenuItem(f'Developer mode : {DEVELOPER_MODE}',None,enabled=False),
+                     MenuItem(f'Modified via cli : {CLI_MODIFIED}',None,enabled=False),
                      Menu.SEPARATOR,
                      MenuItem(f'OS compatibility : {OSsupport}',None,enabled=False),
-                     MenuItem(f'Unsupported features on {sys.platform}: {UnsupportedFeatures}',None,enabled=False)
+                     MenuItem(f'Unsupported features on {sys.platform}: {UnsupportedFeatures}',None,enabled=False),
                   )),
                   MenuItem('Developer options',Menu(
                      MenuItem("Allow other devices to access dashboard",AllowUnsafeDashboard,checked=lambda item:ALLOWUNSAFEDASHBOARD)
