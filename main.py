@@ -59,6 +59,8 @@ DELAY_INFO_EXECTIME=False
 PORT_MODIFIED=False
 PORT_MODIFIED_STATE=False
 FluxlanSource=os.path.basename(sys.argv[0])
+if " " in FluxlanSource:
+   FluxlanSource=""+FluxlanSource+""
 
 for dynamicvar in sys.argv[1:]:
    if '=' in dynamicvar:
@@ -138,19 +140,19 @@ if APP_RELEASE_TYPE=='PERF':
       print('┃ To use the performance release, Pywebview must be installed.')
       print('┗   `pip install pywebview` or download the performance release from github')
 
-APP_VERSION='v0.9 pre'
-APP_VERSION_RELEASE=0
-APP_DATE='2026/05'
+APP_VERSION='v1'
+APP_VERSION_RELEASE=1
+APP_DATE='2026/06'
 APP_UPDATECHK_ROOT='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/repos/FLUXLAN/manifest.json'
 APP_LINK_LOOKUP='https://raw.githubusercontent.com/tromoSM/tromoSM-assets/main/root/info.json'
-APP_BUILD='beta'
+APP_BUILD='stable'
 APP_SUPPORT='https://tromosm.gt.tc/?feedback=true&utm_source=normal_fluxlan_console'
 APP_SUPPORT_LTS_FEEDBACK="https://tromosm.github.io/tromoSM/t/?feedback=true&utm_source=lts_fluxlan_console_n_tray"
 APP_ANALYTICS_LTS='https://tromosm.github.io/tromoSM-analytics/analytics/fluxlan'
 APP_PRIVACY_POLICY_VERSION=4
 APP_GITHUB='https://github.com/tromoSM/FluxLAN'
 APP_PAGE_OTHR_PROJ="https://tromosm.github.io/tromoSM/t/?utm_source=flux_otherprojects_tray#project"
-APP_REL_HASH='flxrelpre-09beta'
+APP_REL_HASH='flxrel_lite-1stable'
 APP_THIRD_PARTY_LICENSES={"Flask":{"license":"BSD-3-Clause","version":"3.1.3"},"Flask-SocketIO":{"license":"MIT","version":"5.6.1"},"Werkzeug":{"license":"BSD-3-Clause","version":"3.1.8"},"Jinja2":{"license":"BSD","version":"3.1.6"},"NumPy":{"license":"BSD-3-Clause","version":"2.4.4"},"OpenCV":{"license":"Apache-2.0","version":"4.13.0.92"},"Requests":{"license":"Apache-2.0","version":"2.33.1"},"Pillow":{"license":"MIT-CMU","version":"12.2.0"},"Rich":{"license":"MIT","version":"15.0.0"},"Cryptography":{"license":"Apache-2.0 OR BSD-3-Clause","version":"48.0.0"},"qrcode":{"license":"BSD","version":"8.2"},"platformdirs":{"license":"MIT","version":"4.9.6"},"pystray":{"license":"LGPLv3","version":"0.19.5"},"pywebview":{"license":"BSD","version":"6.2.1"},"Socket.IO":{"license":"MIT"},"Lottie":{"license":"MIT"}}
 APP_TOS_VERSION=1
 
@@ -159,7 +161,7 @@ MAINUSERSDI={}
 ALLUSERS=[]
 RECORDED_DATA=[]
 
-DEVELOPER_MODE=True
+DEVELOPER_MODE=False
 USETRAYICON=True
 ALLOWUNSAFEDASHBOARD=False 
 
@@ -349,6 +351,15 @@ def CloseSelf(ver):
     FluxLog('Closing FluxLAN',level='high',CoverText=True)
     AdminNotification(title='FluxLAN is closing',body='FluxLAN will be closed in a minute',timeout="never")
     S.emit('closing','normal')
+    try:
+     if not DEVELOPER_MODE:
+       if sys.platform=='win32':
+        kernel=ctypes.WinDLL('kernel32')
+        user=ctypes.WinDLL('user32')
+       if kernel.GetConsoleWindow():
+        user.ShowWindow(kernel.GetConsoleWindow(),5)
+    except:
+      pass
     os.kill(os.getpid(),signal.SIGINT)
 
 def refreshPage(starter='/dashboard',params=None,newTab=True):
@@ -970,7 +981,7 @@ def export(jsond):
    else:
       saveExport()
 
-if not DEVELOPER_MODE:
+if not DEVELOPER_MODE and APP_RELEASE_TYPE=='LITE':
  FluxLog('Opening dashboard')    
  webbrowser.open(f'https://localhost:{MainPort}/dashboard')
 
