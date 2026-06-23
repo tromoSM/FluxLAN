@@ -1,0 +1,12 @@
+Flask
+Flask-SocketIO
+numpy
+rich
+requests
+qrcode[pil]
+cryptography
+platformdirs
+pystray
+opencv-python
+Pillow
+windows-toasts; platform_system=="Windows"
