@@ -10,3 +10,4 @@ pystray
 opencv-python
 Pillow
 windows-toasts; platform_system=="Windows"
+pywebview
