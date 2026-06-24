@@ -34,7 +34,7 @@ jobs:
           pyinstaller \
             --onefile \
             --name "FluxLAN Lite" \
-            lite.py
+            main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
