@@ -1,4 +1,4 @@
-APP_RELEASE_TYPE='LITE'#lite or perf
+APP_RELEASE_TYPE='PERF'#lite or perf
 
 import time
 TIME_BEF_IMPORTS=time.perf_counter()
