@@ -1,0 +1,45 @@
+name: Build DEBs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-debs:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Install fpm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby ruby-dev build-essential wget
+          sudo gem install --no-document fpm
+
+      - name: Download binaries
+        run: |
+          wget -O FluxLAN-Ubuntu \
+            https://github.com/tromoSM/FluxLAN/releases/download/pre-ubuntu-binaries/FluxLAN-Ubuntu
+
+          wget -O FluxLAN-Lite-Ubuntu \
+            https://github.com/tromoSM/FluxLAN/releases/download/pre-ubuntu-binaries/FluxLAN-Lite-Ubuntu
+
+          chmod +x FluxLAN-Ubuntu FluxLAN-Lite-Ubuntu
+
+      - name: Create FluxLAN DEB
+        run: |
+          fpm -s dir -t deb \
+            -n fluxlan \
+            -v 1.0.0 \
+            FluxLAN-Ubuntu=/usr/bin/fluxlan
+
+      - name: Create FluxLAN Lite DEB
+        run: |
+          fpm -s dir -t deb \
+            -n fluxlan-lite \
+            -v 1.0.0 \
+            FluxLAN-Lite-Ubuntu=/usr/bin/fluxlan-lite
+
+      - name: Upload DEBs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-debs
+          path: "*.deb"
