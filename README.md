@@ -43,13 +43,11 @@ brew install fluxlan
  <summary>Windows</summary>
  
  - Download [FluxLAN](https://github.com/tromoSM/FluxLAN/releases/download/v1.0/FluxLAN-Windows.exe) or [FluxLAN Lite](https://github.com/tromoSM/FluxLAN/releases/download/v1.0/FluxLAN-Lite-Windows.exe) and install.
-
-<!--
  - or install using winget 
 ```bash
 winget install FluxLAN
 ```
--->
+
 </details>
 <details>
  <summary>Linux</summary>
